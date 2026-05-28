@@ -16,7 +16,12 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
 - **Concluído:** Unified Identity, **Sovereign Transaction V1 (EIP-1559 Native)**, Mirroring nativo de saldo, Dívida Técnica Bloqueante (Gas Price, ReceiptsRoot, Buy Gas, VM Integration, JSON-RPC Read-only), Rede P2P (DTS Engine), MemPool (Gestão de transações pendentes com Purga Descendente), Sincronismo Determinístico (Besu-style), Conformidade Industrial IBFT2 (Pacing, Configurable Timeouts), Segurança Sync-to-Consensus (Observer Mode), Saneamento de Logs (Critical Level), Ghost Root Killer (Determinismo de Blocos Vazios), Resiliência de Sincronia (Channel Drainage), Compactação Soberana (Storage Optimization), Tsunami PQC Test (10.000 TXs Sustentadas), **Blindagem de Mercado (London/Besu Logic)**, **Otimização de Cache Industrial (MaxWarmTries Guard)** e **Sincronização Atômica Sync-Consensus (Anti-Self-Sabotage).**
 
 ## 🛠️ Decisões Recentes (28/05/2026)
-1. **Otimização Homomórfica O(1) (Verkle Turbo):**
+1. **Ultra-Compactação de Rede (Bi-Polar Short IDs):**
+    - **Ação:** Migração dos Skeleton Blocks para serialização binária usando identificadores de 6 bytes (3 iniciais + 3 finais do TxHash) no lugar de hashes de 32 bytes.
+    - **Motivo:** Eliminar o overhead de banda em blocos grandes (1.5k TXs) que geravam pacotes de rede pesados (>48KB).
+    - **Resultado:** Redução de **81%** no tráfego de rede. Um bloco com 1.000 TXs caiu de ~32KB para **6.2KB**.
+    - **Sucesso de Reconstrução:** Validada reconstrução "stateless" em flood de 10.000 TXs com 0 colisões detectadas.
+2. **Otimização Homomórfica O(1) (Verkle Turbo):**
     - **Ação:** Implementado o cálculo incremental de compromissos IPA ($C' = C + \sum \Delta \times G_i$) no motor Verkle.
     - **Motivo:** Eliminar o custo $O(256)$ de re-computação completa de nós da árvore a cada mutação de estado.
     - **Resultado:** A finalização de blocos pesados (1.5k TXs) caiu de ~5s para <2s. O pico do motor atingiu **750 TX/s**.

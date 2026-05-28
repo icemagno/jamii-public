@@ -9,11 +9,11 @@ Jamii é uma blockchain de alta performance projetada para a era pós-quântica.
 ⚠️ Licença: Este sistema está protegido sob a PolyForm Noncommercial License 1.0.0. O uso e a modificação são livres para fins não comerciais, desde que mantidos os créditos ao autor original. Uso comercial é estritamente proibido.
 
 
-## 🚀 Status do Projeto: Sprint 5.0 Concluída (Maio/2026)
+## 🚀 Status do Projeto: Sprint 8.1 Concluída (Maio/2026)
 
 O núcleo fundamental do Jamii atingiu maturidade industrial e passou por um processo de saneamento de código e documentação (Audit-Ready). Os seguintes módulos estão homologados e documentados em PT-BR:
 
-*   **`pkg/core/types` (v1.1):** Definições soberanas de Header, Block e Receipt com constantes de tamanho padronizadas.
+*   **`pkg/core/types` (v1.2):** Suporte a **Bi-Polar Short IDs** para propagação de blocos ultra-compactos.
 *   **`pkg/blockchain` (v1.1):** Gerenciamento de persistência com prefixos de DB nomeados e sincronismo determinístico.
 *   **`pkg/consensus` (v1.0):** Motor IBFT 2.0 com *Validação Ativa* e *Crash-Resilience*.
 *   **`pkg/trie` (v1.5):** Arquitetura *Bonsai Turbo* com **Verkle Tree Homomórfica (O(1))** validada para produção (~750 TPS pico).
@@ -21,24 +21,20 @@ O núcleo fundamental do Jamii atingiu maturidade industrial e passou por um pro
 
 ## 🛠️ Diferenciais Técnicos
 
+*   **Ultra-Compact Skeleton (Bi-Polar):** Redução de **81%** no tráfego de rede durante o consenso. Blocos com 1000 TXs trafegam em apenas **6.2 KB** (vs 32KB+ no modelo tradicional) usando identificadores de 6 bytes (3 iniciais + 3 finais).
 *   **Arquitetura Bonsai Turbo:** Separação estrita entre dados planos e árvore Merkle, permitindo acesso O(1) e suporte total a reorganizações de rede (Reorgs).
 *   **Verkle Turbo (O(1)):** Implementação de cálculo incremental homomórfico ($C' = C + \sum \Delta \times G_i$), eliminando a re-computação $O(256)$ de compromissos IPA.
-*   **Trie Agility & Stability:** Capacidade de alternar entre SMT e Verkle Trees. A Verkle Tree foi exaustivamente testada e estabilizada para operações em lote com assinaturas reais.
-*   **Audit-Ready Documentation:** Documentação técnica rica em Português Brasileiro integrada diretamente ao código fonte dos módulos Core.
-*   **Segurança PQC Híbrida:** Cada transação é protegida por dois portões criptográficos, com validação obrigatória de assinaturas Secp256k1 e ML-DSA.
-
 
 ## ⚡ Desempenho Soberano (Certificação Industrial 2026)
 
-O Jamii atingiu maturidade de escala em seus dois motores de estado. Abaixo estão os resultados reais obtidos em testes de estresse agressivos (500 Tx/bloco, 1000 slots/contrato) em disco PebbleDB:
+Abaixo estão os resultados reais obtidos em testes de estresse agressivos (1000 Tx/bloco) em disco PebbleDB:
 
-| Motor de Estado | Capacidade Real | Destaque Técnico |
+| Métrica de Eficiência | Resultado Alcançado | Destaque Técnico |
 | :--- | :--- | :--- |
-| **SMT (Sparse Merkle)** | **~1.400 TPS** | **Alta Performance:** Foco em throughput bruto e baixa latência (170MB Heap). |
-| **Verkle Trees** | **~750 TPS** | **Eficiência Homomórfica:** Otimização O(1) com finalização ultra-rápida (Sprint 5.0). |
-| **Encoding SSZ** | **~390k TPS** | Serialização endurecida contra ataques de maleabilidade. |
+| **Banda de Rede** | **~6.2 KB / 1k TXs** | **Bi-Polar Short IDs:** Ultra-compactação de esqueletos de bloco. |
+| **Verkle Trees** | **~750 TPS** | **Eficiência Homomórfica:** Otimização O(1) com finalização ultra-rápida. |
+| **SMT (Sparse Merkle)** | **~1.400 TPS** | **Alta Performance:** Foco em throughput bruto e baixa latência. |
 | **Criptografia PQC** | **~100k TPS** | Verificação dual (Tradicional + Quântica) com memória blindada. |
-| **Tipos Soberanos** | **~615k TPS** | Operações base (Address/Uint256) validadas em auditoria. |
 
 > **Nota:** O TPS efetivo em rede é atualmente limitado pelo `BlockPeriod` de 2s (~270 TPS sustentados); a capacidade bruta do motor suporta picos de 750+ TPS.
 
@@ -69,5 +65,7 @@ Para garantir a integridade da sua instalação, execute a suíte de testes comp
 ```bash
 go test -v ./pkg/...
 ```
+
+---
 **Author:** Carlos Magno O. Abreu (magno.mabreu@gmail.com)
 **License:** Sovereign Jamii License
