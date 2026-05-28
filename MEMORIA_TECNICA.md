@@ -90,7 +90,19 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
     - **Descoberta:** Testes de estresse provaram que manter árvores Verkle na RAM por longos períodos degrada a performance devido ao custo recursivo do `Prune()` e pressão no Garbage Collector.
     - **Decisão Final:** Adotada a política de **Limpeza Agressiva de Cache**. O cache agora é mantido entre blocos (quente), mas é 100% resetado assim que atinge o limite de 512 entradas em contas ou contratos.
     - **Resultado:** Estabilização do throughput em **300 AvgTPS** com consumo de RAM previsível (~890MB) sob carga de flood industrial.
-12. **Veto à Paralelização Externa de Trie (Sprint 4.1):**
+
+13. **Persistência de Recibos e TxIndex (Sprint 4.2 - 28/05/2026):**
+    - **Ação:** Implementada a gravação física de recibos de execução no PebbleDB e o índice de transações (TxHash -> Localização).
+    - **Eliminação de Mocks:** Os recibos agora refletem o status real (`Status`), gás acumulado (`CumulativeGasUsed`) e o hash original da transação, salvos sob o prefixo `r:`.
+    - **Busca em O(1):** A API RPC `eth_getTransactionReceipt` foi refatorada para utilizar o prefixo `txi:`, eliminando a busca linear custosa nos blocos recentes.
+    - **Resultado:** Consultas de recibos pelo SDK Java tornaram-se instantâneas e fidedignas, garantindo a integridade do ciclo de vida de contratos inteligentes.
+
+15. **Invocação Read-Only e Ciclo de Vida Completo (Sprint 4.2):**
+    - **Ação:** Implementado o método JSON-RPC `eth_call` no servidor Go e suporte correspondente no SDK Java.
+    - **Execução Virtual:** O `eth_call` instancia uma EVM com o estado atual (StateRoot) e executa o código de forma isolada, permitindo consultas de estado de contratos sem gerar transações ou custos de gás on-chain.
+    - **Validação Final:** Validado o fluxo unificado (Atomic Deploy + Dynamic Polling + Smart Call) no SDK Java, confirmando a leitura correta de saldos e estado global de dentro da EVM.
+
+14. **Veto à Paralelização Externa de Trie (Sprint 4.1):**
     - **Experimento:** Tentativa de paralelizar o `updateDirtyStorage` do `StateDB` (processar múltiplos contratos simultaneamente).
     - **Resultado:** **Falha por regressão**. O overhead de gestão de goroutines, disputa de locks no banco e o pico de memória (subiu para 2.1GB) derrubaram o TPS de 300 para 218.
     - **Conclusão Técnica:** O paralelismo em Verkle Trees deve ser focado **dentro** da estrutura da árvore (internal node branching) e não na orquestração externa de múltiplas árvores pequenas, especialmente em cenários de alta expansão de endereços (flood).

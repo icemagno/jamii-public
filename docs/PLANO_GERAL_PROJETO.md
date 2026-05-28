@@ -132,6 +132,12 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
 ## ⚡ Fase 8: Sincronismo Híbrido e Throughput (PLANEJADA)
 *Objetivo:* Escalar a rede para volumes massivos de dados sem comprometer a latência do consenso.
 
+### 🦴 Ultra-Compactação de Skeleton Blocks (Bi-Polar Short IDs)
+Para minimizar a largura de banda durante o consenso sem perder a precisão:
+- [ ] **Bi-Polar Short IDs:** Em vez de transmitir hashes de 32 bytes das transações, o Proposer enviará um identificador de **6 bytes** composto pelos **3 primeiros e 3 últimos bytes** do hash original (ex: `[0:3] + [29:32]`).
+- [ ] **Mitigação de Colisão:** O espaçamento bi-polar aumenta a entropia em relação a um truncamento sequencial. Caso (raro) ocorra colisão na MemPool do nó receptor, o nó utilizará o `TxRoot` do cabeçalho como prova matemática para rejeitar a montagem incorreta e solicitar a transação específica via P2P.
+- [ ] **Impacto:** Redução de 48 KB para **~9 KB** por bloco (para 1.500 TXs), melhorando a resiliência em redes de alta latência e reduzindo picos de I/O na placa de rede.
+
 ### 🏛️ Arquitetura de Plano Duplo (Dual-Plane Transport)
 Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transporte de dados:
 

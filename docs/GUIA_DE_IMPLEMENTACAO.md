@@ -56,32 +56,37 @@ Diferente do modelo tradicional onde cada leitura exige percorrer a árvore, a V
 **Prefixos de Armazenamento:**
 * `f + address` -> Dados da Conta (Flat) - **Fonte da Verdade para a VM (Busca O(1))**
 * `v + key` -> Nós da Verkle Tree (Compromissos IPA)
-* `h + num + hash` -> Header do Bloco
-* `b + num + hash` -> Body do Bloco
+* `b + hash` -> Header do Bloco
+* `txl + hash` -> Lista de Hashes de TX do Bloco
+* `tx + hash` -> Corpo da Transação
+* `r + tx_hash` -> **Recibo de Execução (Implementado - PebbleDB)**
+* `txi + tx_hash` -> **Transaction Index (Implementado - Busca O(1))**
 
 ## 4. Validação de Bloco (Validator & Processor)
 **Origem Geth/Besu:** `core/block_validator.go` e `BonsaiWorldState.java`
 
 A função `ProcessBlock(block *Block)` segue este fluxo otimizado (Sprint 5.0):
 1. **Leitura Rápida:** Carregar contas da tabela plana (`f:`) em tempo constante.
-2. **Execução VM:** Processar transações e gerar novos saldos/nonces.
+2. **Execução VM:** Processar transações e gerar novos saldos/nonces e **Recibos**.
 3. **Cálculo Homomórfica (Commit):**
     * Escrever novos dados na tabela plana (`f:`).
     * Atualizar os compromissos da Verkle Tree via $\Delta \times G_i$ (Otimização O(1)).
-4. **Verificação de Raiz:** Comparar a `StateRoot` gerada com a informada no `Header`.
+4. **Verificação de Raiz:** Comparar a `StateRoot` e `ReceiptsRoot` geradas com as informadas no `Header`.
 
-## 5. Recibos de Transação (Receipts)
+## 5. Recibos de Transação (Receipts) - [X] IMPLEMENTADO
 **Origem Geth:** `core/types/receipt.go`
 
-Para cada transação executada, um recibo deve ser gerado e armazenado.
-```go
-type Receipt struct {
-    Status      uint8      // 1 = Sucesso, 0 = Falha
-    CumulativeGas uint64   // Gás usado até esta transação no bloco
-    Logs        []*Log     // Eventos gerados pela VM
-    TxHash      types.Hash // ID da transação
-}
-```
+Os recibos são gerados pelo `StateProcessor` e salvos de forma atômica no PebbleDB.
+
+### Invocação de Estado (eth_call) - [X] IMPLEMENTADO
+Permite a execução de código EVM contra o estado atual sem a criação de blocos.
+*   **Snapshot-based:** Execução isolada que não altera o banco de dados.
+*   **Interface:** Suporta `from`, `to` e `data` (hex).
+
+### Transaction Index (TxIndex) - [X] IMPLEMENTADO
+Permite localizar instantaneamente um recibo ou bloco a partir de um TxHash:
+* `txi:<tx_hash>` -> `{BlockHash, BlockNumber, TxIndex}` (Formato JSON)
+
 
 ## 6. Roteiro de Desenvolvimento (Sprint 5.0 - Verkle Milestone)
 
