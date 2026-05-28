@@ -18,7 +18,7 @@ Este documento define o planejamento estratégico de longo prazo para a constru�
 
 ---
 
-## 🚦 Fase 2: Saneamento e Orquestração (EM CURSO)
+## 🏗️ Fase 2: Saneamento e Orquestração (CONCLUÍDA)
 *Objetivo:* Transformar módulos isolados em um nó funcional e garantir a integridade da transição de estado.
 
 ### 🧹 Saneamento Arquitetural (Dívida Bloqueante)
@@ -35,15 +35,15 @@ Este documento define o planejamento estratégico de longo prazo para a constru�
 - [x] **Módulo NODE (Orquestrador):** Gerenciamento do ciclo de vida dos motores (EVM, Consenso, Store).
 - [x] **Integração VM/Processor:** O `StateProcessor` agora orquestra a execução de bytecode via `EVM.Run`.
 - [x] **Fase P3 da VM (Jump Table):** Migração do loop de execução para despacho via tabela (Besu Compliance). [CONCLUÍDO - 28/05/2026]
-- [ ] **Ativação de Contract Creation (Top-Level):**
-    - [ ] Habilitar fluxo `tx.To == nil` no `StateProcessor`.
-    - [ ] Implementar derivação de endereço baseada no nonce do sender para transações externas.
-    - [ ] Adicionar campo `ContractAddress` no objeto `Receipt` para conformidade industrial.
+- [x] **Ativação de Contract Creation (Top-Level):**
+    - [x] Habilitar fluxo `tx.To == nil` no `StateProcessor`.
+    - [x] Implementar regra de derivação de endereço baseada no nonce do sender para transações externas.
+    - [x] Adicionar campo `ContractAddress` no objeto `Receipt` para conformidade industrial. [CONCLUÍDO - 28/05/2026]
 - [x] **Main Loop & Lifecycle:** Implementação do laço de trabalho que orquestra a transição de alturas e quórum sincronizado. [CONCLUÍDO - 11/05/2026]
 - [x] **CLI Framework:** Implementação de comandos e flags via cobra (cmd/jamii). [CONCLUÍDO - 11/05/2026]
 - [x] **Configuração Dinâmica:** Suporte a YAML/JSON para Gênese.
 - [x] **Identidade de Rede Imutável:** Persistência de parâmetros pétreos no DB (Besu Compliance). [CONCLUÍDO - 28/05/2026]
-- [ ] **Mecanismo LRU (pkg/util/cache):** Cache industrial para o StateDB (limite em MB).
+- [x] **Mecanismo LRU (pkg/util/cache):** Cache industrial para o StateDB (MaxWarmTries). [CONCLUÍDO - 21/05/2026]
 
 ---
 
@@ -68,7 +68,7 @@ Para permitir que o Jamii atue como uma infraestrutura de transição e facilite
 - [ ] **Configuração Genesis `IsHybridSecurity`:** Adicionar flag no `ChainConfig` para tornar o Portão-E (And-Gate) opcional.
 - [ ] **Validação Condicional (StateProcessor):** Modificar a lógica de verificação de transações para aceitar assinaturas puras Secp256k1 (Legacy) quando a flag estiver desativada.
 - [ ] **Handshake de Capabilities:** Informar aos peers via DTS se a rede exige ou não segurança híbrida para evitar rejeições de blocos por divergência de configuração.
-- [ ] **Identidade Unificada (Preservação):** Garantir que a ancoragem de 20 bytes permaneça idêntica, permitindo que uma rede comece em 'Legacy' e evolua para 'Hybrid' via Milestone/Fork sem mudar os endereços.
+- [ ] **Identidade Unificada (Preservação):** Garantir que a ancoragem de 20 bytes permanecesse idêntica, permitindo que uma rede comece em 'Legacy' e evolua para 'Hybrid' via Milestone/Fork sem mudar os endereços.
 
 #### 🏛️ Outros itens de Maturidade:
 - [x] **Gestão de Metadados de Versão:** Persistir a versão do protocolo e do layout do banco de dados para evitar conflitos de identidade e facilitar migrações. [CONCLUÍDO - 28/05/2026]
@@ -76,10 +76,10 @@ Para permitir que o Jamii atue como uma infraestrutura de transição e facilite
 
 #### 🆕 Sprint 4.2: Ativação de Smart Contracts (Roadmap de Deploy)
 Para transformar a Jamii em uma rede de estado programável:
-- [ ] **Fluxo de Criação (Contract Creation):**
-    - [ ] Habilitar detecção de `tx.To == nil` no `StateProcessor`.
-    - [ ] Implementar regra de derivação de endereço `Create(sender, nonce)`.
-    - [ ] Persistência de Bytecode e Storage na Verkle Tree.
+- [x] **Fluxo de Criação (Contract Creation):**
+    - [x] Habilitar detecção de `tx.To == nil` no `StateProcessor`.
+    - [x] Implementar regra de derivação de endereço `Create(sender, nonce)`.
+    - [x] Persistência de Bytecode e Storage na Verkle Tree. [CONCLUÍDO - 28/05/2026]
 - [ ] **Motor de Chamada (Contract Call):**
     - [ ] Implementar o roteamento de transações para o interpretador da JamiiVM.
     - [ ] Adicionar campo `ContractAddress` nos Recibos (`Receipt`) para rastreabilidade de deploy.
@@ -89,13 +89,13 @@ Para transformar a Jamii em uma rede de estado programável:
 
 ---
 
-### 🏗️ Fase 5: Saneamento Arquitetural & Desacoplamento (EM CURSO)
+### 🏗️ Fase 5: Saneamento Arquitetural & Desacoplamento (CONCLUÍDA)
 Para resolver o alto grau de acoplamento detectado e eliminar os gargalos de CPU na finalização de blocos:
 - [x] **Cálculo Incremental Homomórfico (Verkle Optimization):** Migrar da re-computação total O(N) para atualizações O(1) utilizando a propriedade homomórfica dos compromissos IPA (C' = C + delta * G_i). [CONCLUÍDO - 28/05/2026]
     - *Objetivo:* Reduzir o tempo de finalização de blocos de segundos para milissegundos, eliminando o gargalo de CPU na curva Bandersnatch.
-- [ ] **Configuração por Contexto:** Substituir a passagem de variáveis primitivas (ex: `blockPeriod`, `requestTimeout`) por objetos de contexto ou interfaces provedoras (ex: `ChainConfig`).
-- [ ] **Dependency Inversion (DI):** Refatorar os construtores de `Controller`, `Round` e `HeightManager` para dependerem de abstrações de configuração, eliminando a redundância de assinaturas.
-- [ ] **Redução de Boilerplate:** Unificar a orquestração de boot para que novos parâmetros de rede não exijam alterações em cascata em múltiplos arquivos de lógica.
+- [x] **Configuração por Contexto:** Substituir a passagem de variáveis primitivas por objetos de contexto (`ChainConfig`). [CONCLUÍDO - 28/05/2026]
+- [x] **Dependency Inversion (DI):** Refatorar os construtores de `Controller`, `Round` e `HeightManager` para dependerem de abstrações de configuração. [CONCLUÍDO - 28/05/2026]
+- [x] **Redução de Boilerplate:** Unificar a orquestração de boot. [CONCLUÍDO - 28/05/2026]
 
 ### 🛠️ Fase 6: Ecossistema & Kit de Ferramentas (SDK) (EM CURSO)
 Para facilitar a adoção e integração com a camada de Identidade Soberana:
@@ -110,7 +110,7 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
 
 ---
 
-## 🍃 Fase 7: Soberania Stateless (Nós Sem Disco)
+## 🍃 Fase 7: Soberania Stateless (Nós Sem Disco) (PLANEJADA)
 *Objetivo:* Permitir que dispositivos de baixa capacidade (Android, IoT) participem da validação sem armazenar a cadeia completa.
 
 ### 🧬 Verkle Witnesses & Stateless Execution
@@ -143,16 +143,16 @@ Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transpor
     *   **Responsabilidade:** Download massivo de blocos históricos (State Sync), propagação de blocos cheios (Full Blocks) e distribuição de snapshots de estado.
     *   **Benefício:** Utiliza o poder do *Swarm* (enxame) para baixar dados de múltiplos vizinhos simultaneamente, eliminando o gargalo de propagação em blocos de grande porte.
 
-### 🏗️ Integração e Ecossistema (JSON-RPC)
+### 🏗️ Integração e Ecossistema (JSON-RPC) (CONCLUÍDA)
 *Objetivo:* Expor a inteligência da blockchain para o mundo exterior.
 - [x] **Engine API:** Interface Consenso <-> Execução.
 - [x] **JSON-RPC 2.0 (Basic):** Suporte a métodos de leitura (Saldo, Nonce, ChainID).
-- [x] **JSON-RPC 2.0 (Transaction):** Suporte a `eth_sendRawTransaction`.
+- [x] **JSON-RPC 2.0 (Transaction):** Suporte a `eth_sendRawTransaction`. [CONCLUÍDO - 28/05/2026]
 - [ ] **Pub/Sub:** Notificações via WebSockets para eventos de contratos.
 
 ---
 
-### 🚀 Fase 5: Estabilização e Mainnet
+### 🚀 Fase 5: Estabilização e Mainnet (EM CURSO)
 *Objetivo:* Auditorias, stress tests em larga escala e lançamento oficial.
 
 #### 🆕 Sprint 5.1: Mempool Industrial & Resource-Aware (Resiliência Anti-Flood)

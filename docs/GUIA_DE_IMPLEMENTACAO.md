@@ -47,28 +47,28 @@ O `BlockChain` é o orquestrador que utiliza o `pkg/store` para salvar blocos e 
     * `b + num + hash` -> Body (Transactions)
     * `n + num` -> Hash do bloco na altura N (Cadeia Canônica)
 
-## 3. Motor de Armazenamento: Estratégia Bonsai-First
-Para atingir performance de nível industrial, o Jamii não deve depender exclusivamente da SMT para leitura. Implementaremos o modelo de **Flat Storage** (inspirado no Besu Bonsai Tries).
+## 3. Motor de Armazenamento: Verkle Turbo (Bonsai-First Realized)
+Para atingir performance de nível industrial, o Jamii consolidou o modelo de **Flat Storage** (Bonsai Turbo) integrado à **Verkle Tree Homomórfica**.
 
-### Tabela Plana de Contas (`accounts_flat`)
-Diferente do modelo tradicional onde cada leitura exige percorrer a árvore, a VM lerá diretamente de uma tabela plana no PebbleDB.
+### Verkle Tree O(1)
+Diferente do modelo tradicional onde cada leitura exige percorrer a árvore, a VM lê diretamente da tabela plana e a árvore é atualizada de forma incremental (homomórfica).
 
 **Prefixos de Armazenamento:**
-* `f + address` -> Dados da Conta (Flat) - **Fonte da Verdade para a VM**
-* `n + level + hash` -> Nós da SMT (Para provas e raízes)
+* `f + address` -> Dados da Conta (Flat) - **Fonte da Verdade para a VM (Busca O(1))**
+* `v + key` -> Nós da Verkle Tree (Compromissos IPA)
 * `h + num + hash` -> Header do Bloco
 * `b + num + hash` -> Body do Bloco
 
 ## 4. Validação de Bloco (Validator & Processor)
 **Origem Geth/Besu:** `core/block_validator.go` e `BonsaiWorldState.java`
 
-A função `ProcessBlock(block *Block)` deve seguir este fluxo otimizado:
-1. **Leitura Rápida:** Carregar contas da tabela plana (`f:`) em vez da SMT.
+A função `ProcessBlock(block *Block)` segue este fluxo otimizado (Sprint 5.0):
+1. **Leitura Rápida:** Carregar contas da tabela plana (`f:`) em tempo constante.
 2. **Execução VM:** Processar transações e gerar novos saldos/nonces.
-3. **Double-Write Atômico (Commit):**
+3. **Cálculo Homomórfica (Commit):**
     * Escrever novos dados na tabela plana (`f:`).
-    * Atualizar a SMT em background (ou ao final do lote) para gerar a nova `StateRoot`.
-4. **Verificação de Raiz:** Comparar a `StateRoot` gerada pela SMT com a informada no `Header`.
+    * Atualizar os compromissos da Verkle Tree via $\Delta \times G_i$ (Otimização O(1)).
+4. **Verificação de Raiz:** Comparar a `StateRoot` gerada com a informada no `Header`.
 
 ## 5. Recibos de Transação (Receipts)
 **Origem Geth:** `core/types/receipt.go`
@@ -83,23 +83,23 @@ type Receipt struct {
 }
 ```
 
-## 6. Roteiro de Desenvolvimento (Sprint 5)
+## 6. Roteiro de Desenvolvimento (Sprint 5.0 - Verkle Milestone)
 
 ### Passo 1: Definição de Tipos (`pkg/blockchain/types.go`)
-* Implementar `Header` e `Block` com suporte a **Hash Agility**.
-* Implementar o método `Hash()` para o Header (Keccak-256 do SSZ).
+* [x] Implementar `Header` e `Block` com suporte a **Hash Agility**.
+* [x] Implementar o método `Hash()` para o Header (Keccak-256 do SSZ).
 
 ### Passo 2: Implementação do Flat Storage (`pkg/core/state_flat.go`)
-* Modificar o `StateDB` para ler prioritariamente do prefixo `f:`.
-* Implementar a sincronização: toda alteração em `f:` deve agendar uma atualização na SMT.
+* [x] Modificar o `StateDB` para ler prioritariamente do prefixo `f:`.
+* [x] Implementar a sincronização homomórfica com a Verkle Tree.
 
 ### Passo 3: Gerenciador de Cadeia (`pkg/blockchain/chain.go`)
-* Implementar a struct `BlockChain`.
-* Métodos: `GetBlockByNumber`, `GetBlockByHash`, `CurrentBlock`.
-* Integração com `store.Batch` para escritas atômicas (Bloco + Tabela Plana + SMT).
+* [x] Implementar a struct `BlockChain`.
+* [x] Métodos: `GetBlockByNumber`, `GetBlockByHash`, `CurrentBlock`.
+* [x] Integração com `store.Batch` para escritas atômicas (Bloco + Tabela Plana + Verkle).
 
 ### Passo 4: O "Gênesis"
-* Função `WriteGenesisBlock()`: Inicializa a tabela plana e a árvore Merkle com os saldos iniciais.
+* [x] Função `WriteGenesisBlock()`: Inicializa a tabela plana e a árvore Merkle com os saldos iniciais.
 
 ## 7. O Diferencial Jamii: Hash Agility no Header
 Os offsets no SSZ do Header devem ser dinâmicos para aceitar hashes de 32 ou 64 bytes sem quebrar o parser.
