@@ -256,6 +256,14 @@ A grande inovação da Sprint 5.0 foi a eliminação do gargalo de re-computaç�
     Onde $G_i$ é o ponto gerador pré-computado para a posição $i$. Isso reduz a complexidade de atualização de $O(256)$ para $O(1)$ operações de curva elíptica por nível.
 *   **Busca O(1):** A integração com o **Flat Storage** (Bonsai Turbo) permite que o nó acesse qualquer folha da árvore em tempo constante, sem percorrer os 256 caminhos de ramificação para operações de leitura.
 
+#### Teoria Homomórfica: Performance vs. Privacidade
+É fundamental distinguir a aplicação do Jamii em relação ao conceito genérico de *Criptografia Homomórfica* (HE).
+
+*   **Criptografia Homomórfica Geral (Privacidade):** Focada em processar dados sem descriptografá-los (ex: FHE - Fully Homomorphic Encryption). O objetivo é o sigilo absoluto perante o processador (ex: nuvem).
+*   **Homomorfia no Jamii (Performance):** O Jamii utiliza **PHE (Criptografia Parcialmente Homomórfica)** baseada em *Compromissos de Pedersen*. O objetivo não é o sigilo dos dados (que são públicos no estado da blockchain), mas a **verificabilidade instantânea**.
+
+Ao utilizar a propriedade aditiva homomórfica, o motor Verkle do Jamii consegue "somar" uma alteração de saldo diretamente na raiz da árvore ($C' = C + \Delta \times G_i$) sem precisar ler ou reprocessar os 256 ramos vizinhos. Esta é a "mágica" matemática que permite ao sistema manter a segurança industrial com performance de milissegundos.
+
 #### Estrutura e Persistência (PebbleDB)
 *   **Branching Factor:** 256-vias (Aridade de 256), otimizada para provas de estado compactas para *Stateless Clients*.
 *   **Batch Commits:** As mutações de estado são acumuladas em memória e gravadas no PebbleDB em um único batch atômico ao final de cada bloco.
