@@ -73,9 +73,9 @@ Para transformar a Jamii em uma rede de estado programável:
     - [x] Habilitar detecção de `tx.To == nil` no `StateProcessor`.
     - [x] Implementar regra de derivação de endereço `Create(sender, nonce)`.
     - [x] Persistência de Bytecode e Storage na Verkle Tree. [CONCLUÍDO - 28/05/2026]
-- [ ] **Motor de Chamada (Contract Call):**
-    - [ ] Implementar o roteamento de transações para o interpretador da JamiiVM.
-    - [ ] Adicionar campo `ContractAddress` nos Recibos (`Receipt`) para rastreabilidade de deploy.
+- [x] **Motor de Chamada (Contract Call):**
+    - [x] Implementar o roteamento de transações para o interpretador da JamiiVM. [CONCLUÍDO - 03/06/2026]
+    - [x] Adicionar campo `ContractAddress` nos Recibos (`Receipt`) para rastreabilidade de deploy. [CONCLUÍDO - 28/05/2026]
 - [ ] **Integração de Pré-compilados:**
     - [ ] Contrato `0x100`: Conversão Nativa ultra-rápida ETH <-> Jamii Address (Bech32).
     - [ ] Validador PQC On-Chain: Verificação de assinaturas ML-DSA dentro da EVM.

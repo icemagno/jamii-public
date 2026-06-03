@@ -156,9 +156,63 @@ Você deve ter notado que nossas chaves são gigantes por causa da segurança qu
 
 ---
 
-## PARTE 4: Especificação Técnica e Motor de Estado (A Bíblia Técnica)
+## PARTE 4: A Máquina Virtual Soberana (JEVM) e Processamento de Estado
 
-### 4.1. Módulo de Tipos e Primitivas (`pkg/types`)
+O motor de execução da Jamii Blockchain, conhecido como **JEVM (Jamii Ethereum Virtual Machine)**, é o coração programável da rede. Ele foi projetado para garantir a compatibilidade absoluta com o padrão Ethereum, permitindo que contratos escritos em Solidity ou Vyper funcionem nativamente com performance industrial.
+
+### 4.1. A Arquitetura da JEVM (`pkg/vm`)
+Diferente de implementações experimentais, a JEVM segue o modelo de **Despacho via Tabela de Salto (Jump Table)**, o mesmo padrão de alta performance utilizado pelo Hyperledger Besu.
+
+*   **Orquestração Central (`evm.go`):** Gerencia o ciclo de vida das mensagens e o contexto de execução (Block Number, Timestamp, Gas Limit, etc.).
+*   **Isolamento Industrial:** Cada execução ocorre em um `MessageFrame` isolado, garantindo que falhas em contratos não corrompam o estado global da rede.
+*   **Compliance Cancun:** Suporte nativo a opcodes modernos como `PUSH0`, `TLOAD/TSTORE` (Transient Storage) e `MCOPY`.
+
+**JamiiVM (EVM Compliance & Cancun-Ready)**
+A VM opera em registradores de 256 bits e seguindo o rigor industrial do Besu. Atualmente, a JamiiVM atingiu o marco de **95% de conformidade** com o conjunto de instruções do Ethereum Cancun.
+
+*   **Verificação Tripla (The Gold Standard):** Cada instrução crítica foi validada comparando as implementações do Geth, Besu e as especificações do Yellow Paper.
+*   **Opcodes de Nova Geração (Cancun Milestone):** 
+    | Opcode | Hex | Descrição | Status |
+    | :--- | :--- | :--- | :--- |
+    | **PUSH0** | `0x5F` | Empilha o valor zero com custo mínimo de gás. | ✅ Ativo e Testado |
+    | **TLOAD** | `0x5C` | Carregamento de Transient Storage (EIP-1153). | ✅ Ativo e Testado |
+    | **TSTORE** | `0x5D` | Escrita em Transient Storage (EIP-1153). | ✅ Ativo e Testado |
+    | **MCOPY** | `0x5E` | Cópia eficiente de memória (EIP-5656). | ✅ Ativo e Testado |
+    | **BLOBHASH** | `0x49` | Acesso a hashes de blobs (EIP-4844). | ✅ Ativo e Testado |
+
+*   **Transient Storage (EIP-1153):** Implementação completa do armazenamento temporário que zera ao final de cada transação, permitindo padrões de reentrância e comunicação entre contratos com economia massiva de gás.
+*   **BASEFEE Context:** O opcode `BASEFEE` (0x48) é alimentado pelo valor real da rede, permitindo que contratos inteligentes tomem decisões econômicas baseadas no congestionamento.
+*   **Atomicidade de Valor:** Transferências de `msg.value` são protegidas por snapshots de estado, garantindo que o saldo só mude se a execução for concluída sem erros fatais.
+*   **Mirror Resolution:** A VM opera sobre endereços de 20 bytes (Mirrors) para compatibilidade Solidity, mas resolve esses mirrors em identidades soberanas de 33 bytes no momento do acesso ao disco.
+
+### 4.2. O Orquestrador `StateProcessor` (`pkg/core/processor.go`)
+O `StateProcessor` é o cérebro que une a Máquina Virtual ao Banco de Dados de Estado (StateDB). Sua principal responsabilidade é garantir a **Atomicidade da Transição de Estado**.
+
+*   **Sandboxing de Execução:** Antes de persistir qualquer dado no disco (SSD), o processador executa as transações em uma "Sandbox" na RAM. Se uma transação falha ou o bloco é inválido, a Sandbox é descartada, protegendo o banco contra corrupção.
+*   **Garantia de Determinismo:** O processador assegura que, dadas as mesmas transações e o mesmo estado inicial, todos os nós da rede Jamii cheguem exatamente à mesma raiz de estado (`StateRoot`).
+
+**Sistema de Journaling (Diário de Bordo)**
+O Jamii utiliza um **Journal** para rastrear mudanças atômicas:
+*   **Snapshot/Revert:** O `Snapshot()` retorna um índice no Journal; o `RevertToSnapshot()` desfaz apenas as entradas posteriores a esse índice, permitindo reversões rápidas em caso de erro na VM.
+
+### 4.3. O Ciclo de Vida do Gas (Economia EIP-1559)
+A Jamii implementa o mercado de taxas dinâmicas inspirado na atualização Londres do Ethereum.
+
+1.  **Buy Gas (Dedução Preventiva):** O sistema retira do saldo do remetente o valor `GasLimit * EffectiveGasPrice` antes da execução.
+2.  **Execução e Consumo:** Opcodes consomem gás baseados em complexidade computacional.
+3.  **Refund Gas (Estorno):** Gás não utilizado é devolvido: `(GasLimit - GasUsed) * EffectiveGasPrice`.
+4.  **Fee Distribution:** O `BaseFee` é "queimado" e a `PriorityFee` é destinada aos validadores.
+
+### 4.4. Ciclo de Vida de Smart Contracts
+*   **Deploy de Contrato (`tx.To == nil`):** Endereço gerado via `Create(sender, nonce)`.
+*   **Chamada de Contrato:** Execução de bytecode contra o estado atual.
+*   **Recibos:** Gerados com `Status`, `GasUsed` e `ContractAddress`.
+
+---
+
+## PARTE 5: Especificação Técnica e Motor de Estado (A Bíblia Técnica)
+
+### 5.1. Módulo de Tipos e Primitivas (`pkg/types`)
 O módulo `types` é o fundamento de imutabilidade da rede. Ele foi reconstruído para garantir rigidez binária e suporte à evolução criptográfica sem quebra de consenso.
 
 **Hash Agility (Nativo)**
@@ -182,7 +236,7 @@ Para interoperabilidade com a EVM, o Jamii gera um **Mirror Address (0x...)**.
 *   **Lógica Industrial:** `Mirror = EIP55(V2_Payload)`.
 *   **Identidade Única:** Como o Mirror e o Soberano compartilham o mesmo payload, eles apontam para a mesma folha na SMT, garantindo unificação de saldo.
 
-### 4.2. Criptografia e Identidade (`pkg/crypto`)
+### 5.2. Criptografia e Identidade (`pkg/crypto`)
 O Jamii opera em um modelo de **Segurança Pós-Quântica Híbrida**.
 
 **O Portão-E (And-Gate Security)**
@@ -201,7 +255,7 @@ A assinatura é realizada sobre o `BindingHash`, tornando as duas identidades in
 *   **Anti-Otimização:** Uso de `runtime.KeepAlive` para garantir que o compilador não ignore o wiping.
 *   **Performance:** Verificação híbrida estabilizada em **102.904 TPS**.
 
-### 4.3. Codificação e Serialização (`pkg/encoding`)
+### 5.3. Codificação e Serialização (`pkg/encoding`)
 O Jamii utiliza **SSZ (Simple Serialize)** como padrão nativo, unificado sob o modelo **Sovereign V1 (EIP-1559 Native)**.
 
 **Unificação Londres (Besu Alignment)**
@@ -246,7 +300,7 @@ As transações são imutáveis após a criação.
 *   **Deep Copy:** O método `DeepCopy()` garante que o cálculo de hashes de assinatura seja imune a corrupções de memória em ambientes multi-thread.
 *   **Sender Recovery:** O remetente é recuperado de forma "honesta" (PubKey Recovery) apenas uma vez e cacheado no objeto da transação.
 
-### 4.4. Motor de Estado e Persistência (`pkg/trie` & `pkg/store`)
+### 5.4. Motor de Estado e Persistência (`pkg/trie` & `pkg/store`)
 O motor de estado do Jamii evoluiu para a arquitetura **Verkle Turbo (O(1))**, combinando a eficiência de prova dos compromissos IPA (Inner Product Argument) com a velocidade de busca de bancos de dados planos.
 
 #### Verkle Tree Homomórfica (O(1) Optimization)
@@ -274,32 +328,7 @@ Ao utilizar a propriedade aditiva homomórfica, o motor Verkle do Jamii consegue
 *   **Throughput de Pico:** **750 TX/s** sustentados em ambiente de estresse industrial.
 *   **Eficiência de Cache:** Uso do `MaxWarmTries` para manter os nós mais acessados em RAM, reduzindo a pressão sobre o motor de disco.
 
-### 4.5. Orquestração de Estado e VM (`pkg/core` & `pkg/vm`)
-A transição de estado no Jamii segue o padrão de **Atomicidade Real** inspirado no Geth.
-
-**Sistema de Journaling (Diário de Bordo)**
-O Jamii abandonou o modelo de snapshots por cópia em favor de um **Journal**.
-*   **Snapshot/Revert:** O `Snapshot()` retorna um índice no Journal; o `RevertToSnapshot()` desfaz apenas as entradas posteriores a esse índice.
-
-**JamiiVM (EVM Compliance & Cancun-Ready)**
-A VM é o motor de transição de estado, operando em registradores de 256 bits e seguindo o rigor industrial do Besu. Atualmente, a JamiiVM atingiu o marco de **95% de conformidade** com o conjunto de instruções do Ethereum Cancun.
-
-*   **Verificação Tripla (The Gold Standard):** Cada instrução crítica foi validada comparando as implementações do Geth, Besu e as especificações do Yellow Paper.
-*   **Opcodes de Nova Geração (Cancun Milestone):** 
-    | Opcode | Hex | Descrição | Status |
-    | :--- | :--- | :--- | :--- |
-    | **PUSH0** | `0x5F` | Empilha o valor zero com custo mínimo de gás. | ✅ Ativo e Testado |
-    | **TLOAD** | `0x5C` | Carregamento de Transient Storage (EIP-1153). | ✅ Ativo e Testado |
-    | **TSTORE** | `0x5D` | Escrita em Transient Storage (EIP-1153). | ✅ Ativo e Testado |
-    | **MCOPY** | `0x5E` | Cópia eficiente de memória (EIP-5656). | ✅ Ativo e Testado |
-    | **BLOBHASH** | `0x49` | Acesso a hashes de blobs (EIP-4844). | ✅ Ativo e Testado |
-
-*   **Transient Storage (EIP-1153):** Implementação completa do armazenamento temporário que zera ao final de cada transação, permitindo padrões de reentrância e comunicação entre contratos com economia massiva de gás.
-*   **BASEFEE Context:** O opcode `BASEFEE` (0x48) é alimentado pelo valor real da rede, permitindo que contratos inteligentes tomem decisões econômicas baseadas no congestionamento.
-*   **Atomicidade de Valor:** Transferências de `msg.value` são protegidas por snapshots de estado, garantindo que o saldo só mude se a execução for concluída sem erros fatais.
-*   **Mirror Resolution:** A VM opera sobre endereços de 20 bytes (Mirrors) para compatibilidade Solidity, mas resolve esses mirrors em identidades soberanas de 33 bytes no momento do acesso ao disco.
-
-### 4.6. Higiene Protocolar e Resiliência de Memória (Higiene Sincronizada)
+### 5.5. Higiene Protocolar e Resiliência de Memória (Higiene Sincronizada)
 O Jamii implementa um rigoroso protocolo de limpeza automática para evitar vazamentos de memória (OOM) e ataques de poluição de estado em cenários de instabilidade de rede ou consenso.
 
 **Gestão de Memória da MemPool (O Custo PQC)**
@@ -320,7 +349,7 @@ Fragmentos de blocos (Compact Blocks) que aguardam transações via P2P são mon
 **Higiene de Rodadas (Consensus Rounds)**
 O controlador de consenso (IBFT) realiza a purga de votos (`roundChangeVotes`) e propostas futuras (`futureProposals`) sempre que uma nova rodada é efetivamente iniciada, garantindo que o estado interno do nó permaneça limpo após saltos de rodada (Round Jumps).
 
-### 4.7. Sincronização e Resiliência P2P (`SyncManager`)
+### 5.6. Sincronização e Resiliência P2P (`SyncManager`)
 O processo de sincronização da Jamii Blockchain é projetado para ser **direcionado e eficiente**, protegendo a largura de banda da rede e a CPU dos validadores ativos.
 
 #### Estratégia "Best Peer" (Seleção Inteligente)
@@ -344,16 +373,27 @@ Para cenários de sincronismo massivo (milhões de blocos), o Jamii evoluirá pa
 
 ---
 
-## PARTE 5: Ecossistema e Interfaces Externas
+## PARTE 6: Ecossistema e Interfaces Externas
 
-### 5.1. Servidor JSON-RPC (A Ponte de Integração)
+### 6.1. Servidor JSON-RPC (A Ponte de Integração)
 O servidor RPC da Jamii foi redesenhado para oferecer performance industrial e compatibilidade estrita com ferramentas de mercado (Web3.js, Ethers, MetaMask).
 
 *   **Arquitetura:** Baseada no padrão de Request/Response atômico, com suporte nativo ao mercado de taxas EIP-1559.
 *   **Módulos Suportados:** `eth_*` (Core), `net_*` (Rede) e `web3_*` (Utils).
 *   **Otimização:** Uso de pools de conexão e buffers SSZ para serialização rápida de blocos e transações.
 
-### 5.2. Padrão Único de Transações: eth_sendRawTransaction
+**O Dispatcher Geth-Compliant:**
+O servidor (`pkg/rpc/server.go`) atua como um roteador de alta velocidade. Métodos como `eth_blockNumber`, `eth_getBalance` e `eth_getTransactionReceipt` são resolvidos diretamente contra o `Blockchain` e o `StateDB`.
+
+**Execução Read-Only com `eth_call`:**
+Para permitir a simulação de transações e a leitura de estados de contratos sem custo de gás ou alteração no banco de dados, o Jamii implementa o `eth_call`.
+*   **Snapshot Isolado:** Cada chamada cria uma instância temporária da JEVM que opera sobre um snapshot do estado atual.
+*   **Segurança:** Nenhuma alteração feita durante um `eth_call` é persistida, garantindo que consultas externas sejam puramente informativas.
+
+**Propagação e MemPool:**
+Ao receber uma transação via `eth_sendRawTransaction`, o servidor a encaminha para a MemPool local. Se a transação for válida (assinatura correta, nonce em ordem e saldo suficiente), ela é armazenada e simultaneamente propagada para o restante da rede através do motor **DTS (MT_TRANSACTION)**.
+
+### 6.2. Padrão Único de Transações: eth_sendRawTransaction
 Diferente de implementações Ethereum legadas, a Jamii Blockchain adota o **eth_sendRawTransaction** como o único endpoint para postagem de dados. 
 
 **Segurança por Design (Server-Side Privacy):**
@@ -368,7 +408,7 @@ O nó utiliza o conteúdo da transação assinada para determinar sua finalidade
 | **Deploy de Contrato** | **Nulo (nil)** | Bytecode | Criação de conta e instalação de código. |
 | **Chamada de Contrato** | Endereço do Contrato | Input Data | Execução da JamiiVM sobre o código destino. |
 
-### 5.3. SDK Java Soberano (`sdk/java`)
+### 6.3. SDK Java Soberano (`sdk/java`)
 Para suportar o desenvolvimento de aplicações empresariais e mobile (Android), criamos o **Jamii Java SDK**.
 
 *   **PQC Native:** Primeira biblioteca Java do mundo com suporte nativo a ML-DSA-65 (Dilithium) integrado ao fluxo de transações blockchain.
