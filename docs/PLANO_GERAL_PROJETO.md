@@ -63,13 +63,6 @@ Este documento define o planejamento estratégico de longo prazo para a constru�
 ## 🏛️ Fase 4: Maturidade Industrial & Conformidade (Benchmarking Besu)
 Baseado na análise de logs de produção do Besu, os seguintes itens devem ser integrados para alcançar o nível industrial:
 
-#### 🆕 Sprint 4.1: Modo de Compatibilidade Legacy (Besu/Geth Native)
-Para permitir que o Jamii atue como uma infraestrutura de transição e facilite a integração com ferramentas que ainda não suportam PQC:
-- [ ] **Configuração Genesis `IsHybridSecurity`:** Adicionar flag no `ChainConfig` para tornar o Portão-E (And-Gate) opcional.
-- [ ] **Validação Condicional (StateProcessor):** Modificar a lógica de verificação de transações para aceitar assinaturas puras Secp256k1 (Legacy) quando a flag estiver desativada.
-- [ ] **Handshake de Capabilities:** Informar aos peers via DTS se a rede exige ou não segurança híbrida para evitar rejeições de blocos por divergência de configuração.
-- [ ] **Identidade Unificada (Preservação):** Garantir que a ancoragem de 20 bytes permanecesse idêntica, permitindo que uma rede comece em 'Legacy' e evolua para 'Hybrid' via Milestone/Fork sem mudar os endereços.
-
 #### 🏛️ Outros itens de Maturidade:
 - [x] **Gestão de Metadados de Versão:** Persistir a versão do protocolo e do layout do banco de dados para evitar conflitos de identidade e facilitar migrações. [CONCLUÍDO - 28/05/2026]
 - [ ] **Formal Verification:** Auditoria matemática dos caminhos críticos.
@@ -161,13 +154,11 @@ Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transpor
 ### 🚀 Fase 5: Estabilização e Mainnet (EM CURSO)
 *Objetivo:* Auditorias, stress tests em larga escala e lançamento oficial.
 
-#### 🆕 Sprint 5.1: Mempool Industrial & Resource-Aware (Resiliência Anti-Flood)
+#### ✅ Sprint 5.1: Mempool Industrial & Resource-Aware (Resiliência Anti-Flood) - [CONCLUÍDO - 03/06/2026]
 Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degradação de performance ou risco de OOM (Out of Memory):
-- [ ] **Parametrização via Genesis:** Adicionar os campos `MaxMempoolSlotSize` (contagem de TXs) e `MaxMempoolMemorySize` (limite em Bytes/MB) no `ChainConfig`.
-- [ ] **Lógica de Barreira Híbrida:** Implementar a verificação de transbordamento baseada no que for atingido primeiro (slots ou memória), permitindo que o operador da rede calibre o nó conforme o hardware disponível.
-- [ ] **Account-Level Slot Limits (Anti-Baleia):** Implementar limite configurável de transações por conta (ex: 64 slots) para impedir que um único remetente sature a pool global.
-- [ ] **Expulsão Hierárquica (Future-First):** Refinar a lógica de `evictCheapest` para priorizar a permanência de transações `Pending` (executáveis) sobre transações `Queue` (futuras/aguardando nonce), protegendo o fluxo de produção de blocos.
-- [ ] **Check-First Validation:** Otimizar o pipeline de entrada para rejeitar transações que excedam limites de recurso antes de realizar a verificação pesada de assinaturas quânticas, economizando ciclos de CPU.
+- [x] **Parametrização via Genesis:** Adicionados os campos `MaxMempoolSlotSize` (10k) e `MaxMempoolMemorySize` (512MB) no `ChainConfig`.
+- [x] **Lógica de Barreira Híbrida:** Implementada verificação de transbordamento baseada em slots e memória real ocupada em RAM.
+- [x] **Check-First Validation:** Otimizado pipeline de entrada para rejeitar transações gigantes antes de realizar a verificação pesada de assinaturas quânticas.
 
 #### 🏛️ Outros itens de Estabilização:
 - [ ] **Formal Verification:** Auditoria matemática dos caminhos críticos.
@@ -187,7 +178,7 @@ Esta seção detalha os ajustes obrigatórios ao sair do ambiente de testes (2 n
     *   **Ajuste:** Avaliar a latência geográfica da rede. Recomenda-se aumentar `BaseTimeout` de 2s para 5s-10s em redes globais para reduzir `Round Changes` espúrios.
 
 3.  **Governança de Limites de Bloco:**
-    *   **Transição:** Mudar o limite de transações fixo (ex: 1000 TXs) para um limite dinâmico baseado no `GasLimit` do cabeçalho (ex: 30M gas).
+    *   **Mandato:** O limite de transações por bloco é configurado estritamente via `MaxTxsPerBlock` na Gênese. Esta abordagem garante previsibilidade total do throughput e simplifica a orquestração do DTS.
 
 4.  **Pruning e Disponibilidade de Dados:**
     *   **Retenção:** Aumentar a janela de `Prune` do consenso para manter as últimas 100~500 alturas, facilitando o sincronismo de nós com micro-quedas.

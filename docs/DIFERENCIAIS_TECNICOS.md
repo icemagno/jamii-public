@@ -36,11 +36,7 @@ Arquitetura focada em resiliência e determinismo absoluto.
 *   **MemPool Purge Descendente:** Limpeza inteligente da fila de transações. Se um nonce falha, todos os subsequentes são expulsos, prevenindo congestionamentos.
 *   **Atomic Journaling:** Snapshots atômicos por transação garantem que falhas na VM nunca deixem o saldo do StateDB em estado inconsistente.
 
-## 🤝 5. Flexibilidade de Infraestrutura (Legacy Mode)
-*   **IsHybridSecurity Flag:** Possibilidade de configurar a rede via Genesis para operar em modo de compatibilidade total com Besu/Geth (Secp256k1 puro).
-*   **Evolução Progressiva:** Permite que infraestruturas existentes migrem para o Jamii e ativem a proteção quântica através de Milestones/Forks programados, sem alteração de endereços para os usuários.
-
-## 📦 6. Stack Tecnológica de Ponta
+## 📦 5. Stack Tecnológica de Ponta
 *   **PebbleDB (100% Go):** Camada de persistência de alto desempenho para o estado mundial.
 *   **Sparse Merkle Tree (SMT) / Verkle Tree:** Motores de trie avançados para validação stateless e provas compactas.
 *   **IBFT 2.0 (Besu-style):** Consenso com finalidade imediata e tolerância a falhas bizantinas.

@@ -15,6 +15,26 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
 
 - **Concluído:** Unified Identity, **Sovereign Transaction V1 (EIP-1559 Native)**, Mirroring nativo de saldo, Dívida Técnica Bloqueante (Gas Price, ReceiptsRoot, Buy Gas, VM Integration, JSON-RPC Read-only), Rede P2P (DTS Engine), MemPool (Gestão de transações pendentes com Purga Descendente), Sincronismo Determinístico (Besu-style), Conformidade Industrial IBFT2 (Pacing, Configurable Timeouts), Segurança Sync-to-Consensus (Observer Mode), Saneamento de Logs (Critical Level), Ghost Root Killer (Determinismo de Blocos Vazios), Resiliência de Sincronia (Channel Drainage), Compactação Soberana (Storage Optimization), Tsunami PQC Test (10.000 TXs Sustentadas), **Blindagem de Mercado (London/Besu Logic)**, **Otimização de Cache Industrial (MaxWarmTries Guard)** e **Sincronização Atômica Sync-Consensus (Anti-Self-Sabotage).**
 
+## 🛠️ Decisões Recentes (03/06/2026)
+1. **Blindagem de Memória e Slots (Mempool Resilience V1):**
+    - **Ação:** Implementada proteção de "Portão Duplo" na MemPool, limitando tanto a quantidade de transações (`MaxMempoolSlotSize`) quanto o consumo real de RAM (`MaxMempoolMemorySize`).
+    - **Lógica de Expulsão Híbrida:** O nó agora realiza expulsão em loop (AllHeap) até que ambos os critérios de saúde sejam restabelecidos, priorizando transações de maior valor econômico.
+    - **Anti-OOM:** Adicionada validação *check-first* que rejeita transações individuais que sozinhas excedam o limite total de memória da pool.
+    - **Resultado:** Garantia de que o nó Jamii permaneça operacional sob ataques de flood massivo, com consumo de RAM previsível e proteção contra exaustão de CPU por validações inúteis.
+
+## 🛠️ Decisões Recentes (03/06/2026)
+1. **Refatoração do Motor Verkle (Deadlock & Atomicidade):**
+    - **Problema:** Detectado Deadlock Recursivo durante a materialização do Genesis. O motor tentava adquirir um lock de leitura (`RLock`) para ler configurações enquanto já segurava o lock mestre de escrita (`Lock`).
+    - **Solução:** Implementado sistema de **Cache Sharding Antecipado** (Eager Loading) no construtor da Verkle Tree. Removida a necessidade de travas (`v.mu`) para leitura de configurações.
+    - **Segurança Atômica:** A variável `cacheMultiplier` foi migrada para o tipo `atomic.Uint64` (IEEE 754 bitcasting), permitindo que o cache seja redimensionado em tempo real sem causar contenção ou deadlocks no pipeline de execução.
+    - **Performance:** Restaurado o paralelismo multi-core total para o cálculo de compromissos IPA/Bandersnatch.
+
+2. **Blindagem de Memória e Slots (Mempool Resilience V1):**
+    - **Ação:** Implementada proteção de "Portão Duplo" na MemPool, limitando tanto a quantidade de transações (`MaxMempoolSlotSize`) quanto o consumo real de RAM (`MaxMempoolMemorySize`).
+    - **Lógica de Expulsão Híbrida:** O nó agora realiza expulsão em loop (AllHeap) até que ambos os critérios de saúde sejam restabelecidos, priorizando transações de maior valor econômico.
+    - **Anti-OOM:** Adicionada validação *check-first* que rejeita transações individuais que sozinhas excedam o limite total de memória da pool.
+    - **Resultado:** Garantia de que o nó Jamii permaneça operacional sob ataques de flood massivo, com consumo de RAM previsível e proteção contra exaustão de CPU por validações inúteis.
+
 ## 🛠️ Decisões Recentes (28/05/2026)
 1. **Ultra-Compactação de Rede (Bi-Polar Short IDs):**
     - **Ação:** Migração dos Skeleton Blocks para serialização binária usando identificadores de 6 bytes (3 iniciais + 3 finais do TxHash) no lugar de hashes de 32 bytes.
@@ -86,10 +106,6 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
 9. **Determinismo de Assinatura (Effective Price Separation):**
     - **Ação:** O campo `GasPrice` (Effective) foi removido do layout binário assinado.
     - **Motivo:** Permitir assinaturas imutáveis. O preço pago é uma consequência do estado da rede, não uma previsão do usuário. O usuário assina apenas seus limites (`MaxFee` e `PriorityFee`).
-10. **Sprint Futuro: Modo de Compatibilidade Legacy (Besu/Geth):**
-    - **Decisão:** Inserido no roadmap o suporte opcional ao Portão-E (And-Gate) via Genesis (`IsHybridSecurity`).
-    - **Motivo:** Permitir que redes Jamii operem em modo de compatibilidade total com o ecossistema Ethereum clássico quando a proteção PQC não for o requisito imediato, facilitando a migração gradual de infraestruturas existentes.
-    - **Pilar:** A Identidade Unificada (20-byte payload) é preservada como o elo comum entre os modos Legacy e Hybrid.
 11. **Otimização de Cache Industrial (Sprint 4.1 - 21/05/2026):**
     - **Ação:** Implementado e validado o uso da constante `MaxWarmTries` para gerenciar o cache de contas e contratos no `StateDB`.
     - **Descoberta:** Testes de estresse provaram que manter árvores Verkle na RAM por longos períodos degrada a performance devido ao custo recursivo do `Prune()` e pressão no Garbage Collector.
