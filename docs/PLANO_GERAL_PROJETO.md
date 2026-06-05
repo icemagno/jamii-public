@@ -77,7 +77,7 @@ Para transformar a Jamii em uma rede de estado programável:
     - [x] Implementar o roteamento de transações para o interpretador da JamiiVM. [CONCLUÍDO - 03/06/2026]
     - [x] Adicionar campo `ContractAddress` nos Recibos (`Receipt`) para rastreabilidade de deploy. [CONCLUÍDO - 28/05/2026]
 - [ ] **Integração de Pré-compilados:**
-    - [ ] Contrato `0x100`: Conversão Nativa ultra-rápida ETH <-> Jamii Address (Bech32).
+    - [ ] **Identity Bridge (Sovereign Address Bridge):** Conversão Nativa ultra-rápida ETH <-> Jamii Address (Bech32). Alocado no final do espaço de endereçamento (ex: `0x...FF`) para evitar conflitos com o Geth.
     - [ ] Validador PQC On-Chain: Verificação de assinaturas ML-DSA dentro da EVM.
 
 ---
@@ -137,10 +137,20 @@ Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transpor
 1.  **Plano de Controle (DTS Custom):**
     *   **Foco:** Baixa latência.
     *   **Responsabilidade:** Votos de consenso (IBFT2), sinalização de rounds, compact blocks e transações individuais.
-2.  **Plano de Dados (BitTorrent via `anacrolix/torrent`):**
+2.  **Plano de Dados (BitTorrent via `anacrolix/torrent`):** [CONCLUÍDO - 04/06/2026]
     *   **Foco:** Alto rendimento (Throughput).
     *   **Responsabilidade:** Download massivo de blocos históricos (State Sync), propagação de blocos cheios (Full Blocks) e distribuição de snapshots de estado.
-    *   **Benefício:** Utiliza o poder do *Swarm* (enxame) para baixar dados de múltiplos vizinhos simultaneamente, eliminando o gargalo de propagação em blocos de grande porte.
+    *   **Arquitetura Soberana (Trusted Peers):** Diferente de clientes BitTorrent convencionais, a Jamii injeta automaticamente a topologia de validadores como `Trusted Peers` em cada torrent. Isso elimina a dependência de DHTs públicos ou Trackers, garantindo conectividade P2P direta, imediata e segura entre os nós da rede.
+    *   **Estratégia Zero-Copy (Virtual Storage):** O motor BitTorrent não duplica dados no disco. Ele acessa o banco de dados (StateDB) através de um wrapper de "Arquivo Virtual", serializando pedaços da chain sob demanda. Isso garante que o uso de disco não dobre, mantendo a eficiência industrial.
+    *   **Isolamento de Consenso:** O tráfego pesado de dados flui em paralelo ao DTS, garantindo que o download de blocos passados não gere latência (jitter) nas mensagens de voto em tempo real.
+    *   **Benefício:** Utiliza o poder do *Swarm* (enxame) para baixar dados de múltiplos vizinhos simultaneamente, otimizando o uso de banda em redes distribuídas.
+
+#### 🧪 Experiência de Validação de Malha (Mesh Test) [CONCLUÍDO - 04/06/2026]
+Para validar a robustez da infraestrutura BitTorrent, foi implementado um laboratório isolado:
+- **Payload:** Cada nó gera um arquivo de 100MB (`ID[:5].bin`).
+- **Descoberta:** Anunciador HTTP em porta dedicada (`TorrentPort + 10000`).
+- **Swarm Logic:** Logs em nível DEBUG comprovam a recepção de chunks de múltiplas fontes simultâneas.
+- **Isolamento:** A rede de dados opera de forma totalmente independente do consenso IBFT.
 
 ### 🏗️ Integração e Ecossistema (JSON-RPC) (CONCLUÍDA)
 *Objetivo:* Expor a inteligência da blockchain para o mundo exterior.

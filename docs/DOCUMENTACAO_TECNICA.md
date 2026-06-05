@@ -371,6 +371,34 @@ Para cenários de sincronismo massivo (milhões de blocos), o Jamii evoluirá pa
 *   **Otimização:** O nó dividirá a cadeia em "chunks" de blocos, solicitando diferentes fatias de múltiplos pares simultaneamente.
 *   **Performance:** Esta abordagem transformará o sincronismo em uma operação de **Alto Rendimento**, eliminando o I/O de disco como gargalo único de um só par.
 
+### 5.7. O Plano de Dados (Data Plane): Arquitetura BitTorrent Soberana
+A Jamii adota uma arquitetura de rede de "Plano Duplo", onde o **BitTorrent** atua como o músculo de transporte para dados pesados, operando em total isolamento da sinalização crítica de consenso.
+
+#### 1. Separação de Responsabilidades (Control vs. Data)
+*   **DTS (Plano de Controle):** Sistema de baixa latência focado na "janela crítica" do consenso. Transporta votos, propostas e esqueletos de blocos (Compact Blocks). É o sistema nervoso que mantém a rede viva.
+*   **Torrent (Plano de Dados):** Sistema de alta vazão (Throughput) focado em background. Responsável pelo download de blocos históricos, propagação de blocos cheios (Full Blocks) e distribuição de Snapshots de estado.
+
+#### 2. Rede Soberana e Privada
+Diferente de clientes torrent convencionais, a implementação da Jamii (em `pkg/torrent/engine.go`) é configurada para máxima segurança:
+*   **Isolamento Total:** DHT, PEX (Peer Exchange) e Trackers públicos estão desativados.
+*   **Topologia Injetada:** A rede de validadores é injetada manualmente como `Trusted Peers`. Isso cria uma malha P2P privada onde os nós se conectam apenas entre si, eliminando vetores de ataque de redes públicas.
+
+#### 3. Eficiência de Armazenamento: O Arquivo Virtual (Zero Duplication)
+Para evitar o desperdício de espaço em disco (não duplicar o banco de dados em arquivos torrent), o Jamii utiliza a técnica de **Virtual File Storage**:
+*   **Abstração de I/O:** O motor de torrent não lê arquivos físicos do sistema operacional. Ele utiliza uma interface customizada que mapeia "pedaços" do torrent diretamente para leituras no **StateDB (PebbleDB)**.
+*   **On-the-fly Serialization:** Quando um par remoto solicita um dado, o nó lê os blocos do banco, serializa-os em memória e os entrega via protocolo torrent. O dado físico existe em apenas um lugar: o banco de dados da blockchain.
+
+#### 4. Integração Dinâmica via DTS
+O Torrent não substitui a descoberta de dados, ele apenas executa a entrega. O fluxo de trabalho integrado é:
+1.  **Sinalização:** Um validador anuncia via **DTS** que um novo chunk de blocos (ex: 1.000 alturas) está disponível, informando o seu **InfoHash**.
+2.  **Descoberta:** Nós que precisam desses dados (seja por estarem em `HALT` ou por terem perdido um bloco pesado) instruem seu motor Torrent a buscar esse InfoHash.
+3.  **Download Multidirecional (Swarm):** O nó baixa pedaços de diferentes validadores ao mesmo tempo, utilizando a soma da banda de toda a rede para se recuperar o mais rápido possível e voltar ao modo de consenso ativo.
+
+#### 5. Snapshots e Poda (Pruning)
+O Torrent é essencial para a estratégia de **Snapshots**:
+*   **State Snapshots:** Fotos compactas do estado atual (saldos e contratos) são compartilhadas via torrent para que novos nós possam "pular" o processamento de blocos antigos e chegar à altura atual em minutos.
+*   **Poda Geográfica:** Nem todos os nós precisam semear toda a chain. Nós podem escolher ser "Seeders" apenas dos últimos blocos ou de fatias específicas, garantindo a disponibilidade de dados sem sobrecarregar o hardware individual.
+
 ---
 
 ## PARTE 6: Ecossistema e Interfaces Externas

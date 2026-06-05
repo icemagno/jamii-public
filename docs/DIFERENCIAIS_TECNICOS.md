@@ -42,5 +42,26 @@ Arquitetura focada em resiliência e determinismo absoluto.
 *   **IBFT 2.0 (Besu-style):** Consenso com finalidade imediata e tolerância a falhas bizantinas.
 *   **DTS (Block Sharding):** Propagação eficiente de propostas através de fragmentação, mitigando o peso de assinaturas PQC na rede.
 
+## 🚀 6. Natureza da Rede: Do Corporativo ao Público
+O rótulo "corporativo" da Besu (e consequentemente a escolha do IBFT2 para a Jamii) muitas vezes gera confusão sobre a aplicabilidade da rede. No Jamii, desmistificamos essa visão através de três pilares fundamentais:
+
+### 6.1. Besu: Corporativa vs. Pública
+A stack Besu **não é limitada** a redes privadas. Ela é um dos poucos clientes "Mainnet-compatible", o que significa que ela roda na rede pública do Ethereum hoje, processando milhões de transações. O termo "corporativo" refere-se à disponibilidade de ferramentas que o Geth (padrão do mercado) não prioriza, como:
+*   **Privacidade:** Capacidade de transações restritas a partes autorizadas.
+*   **Permissionamento:** Controle granular de leitura e escrita.
+*   **Conformidade:** Facilidade de auditoria e integração com sistemas legados.
+
+### 6.2. O Papel do Consenso (IBFT 2.0)
+O **IBFT 2.0** define o perfil de operação da rede, equilibrando vazão e finalidade:
+*   **Finalidade Imediata:** Diferente de consensos probabilísticos (PoW/PoS tradicional), no IBFT 2.0 um bloco selado é definitivo. Isso elimina riscos de bifurcação (reorgs), sendo vital para aplicações financeiras de alto valor.
+*   **Escalabilidade de Usuários vs. Validadores:** O IBFT 2.0 suporta **grandes cargas de usuários** (TPS elevado), otimizando a rede para um conjunto selecionado de validadores (20 a 100), onde a confirmação ocorre em segundos em vez de minutos.
+
+### 6.3. A Jamii como "Autoestrada Digital" Pública
+O modelo da Jamii, ao herdar a lógica da Besu e o consenso IBFT 2.0, posiciona-se como uma **Rede Pública Soberana**:
+*   **Acesso Público:** Qualquer usuário pode transacionar e interagir com Smart Contracts de forma irrestrita.
+*   **Governança Profissional:** Os validadores são entidades conhecidas ou selecionadas, garantindo que a rede privilegie a eficiência e a segurança da finalidade sobre a descentralização extrema de mineradores anônimos.
+
+**Veredito:** A Jamii não é uma rede "privada", mas uma blockchain de **alta performance e baixa latência**, ideal para uso público massivo, funcionando como uma infraestrutura pública de alta confiabilidade.
+
 ---
 **Documento gerado pelo núcleo de engenharia da Jamii Blockchain - Maio/2026.**
