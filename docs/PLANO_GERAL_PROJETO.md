@@ -227,9 +227,12 @@ Estas tarefas são consideradas bloqueantes para o lançamento da Mainnet. Sem e
     *   **Definição:** Implementar suporte a WebSockets no módulo `pkg/rpc` para o método `eth_subscribe`.
     *   **Impacto:** Indispensável para carteiras (MetaMask) e dApps receberem notificações de eventos de contratos e confirmações de TX em tempo real.
 
-4.  **Formal Verification (Core Audit):**
-    *   **Status:** Planejada.
-    *   **Definição:** Auditoria matemática dos caminhos críticos de transição de estado e verificação de assinaturas PQC.
+4.  **Verkle Gas Repricing (EIP-4762 Compliance):**
+    *   **Status:** Pendente.
+    *   **Definição:** Ajustar a tabela de custos de gás (`GasCalculator`) para refletir o custo computacional real das provas Verkle/IPA, conforme a proposta oficial da Ethereum Foundation.
+    *   **Impacto:** Protege a rede contra ataques de exaustão de CPU (DoS) que exploram a complexidade matemática da curva Bandersnatch em comparação aos hashes tradicionais.
+
+5.  **Formal Verification (Core Audit):**
 
 ---
 
