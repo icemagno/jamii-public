@@ -207,6 +207,34 @@ Esta seção detalha os ajustes obrigatórios ao sair do ambiente de testes (2 n
 
 ## 🧭 Diretrizes de Evolução (Mandatos)
 
+---
+
+## 🔴 Production Blocking Debt (Pendências Críticas)
+Estas tarefas são consideradas bloqueantes para o lançamento da Mainnet. Sem elas, a rede opera apenas em modo de "Federação Fechada".
+
+1.  **On-Chain Validator Registry (Sovereign Governance):**
+    *   **Status:** Pendente.
+    *   **Definição:** Mover as chaves públicas PQC de validadores do arquivo local (`identities.json`) para a **Verkle Tree**.
+    *   **Impacto:** Permite a governança descentralizada (votação para novos validadores) e rotatividade de chaves sem necessidade de Hard Forks.
+
+2.  **Torrent Snap Sync (High-Speed Onboarding):**
+    *   **Status:** Motor validado, Integração pendente.
+    *   **Definição:** Utilizar o motor BitTorrent (Fase 8) para distribuir snapshots binários da Verkle Tree.
+    *   **Impacto:** Permite que novos nós entrem na rede instantaneamente, baixando apenas o estado atual em vez de reprocessar milhões de blocos históricos.
+
+3.  **Real-Time Event Streaming (WebSocket RPC):**
+    *   **Status:** Pendente.
+    *   **Definição:** Implementar suporte a WebSockets no módulo `pkg/rpc` para o método `eth_subscribe`.
+    *   **Impacto:** Indispensável para carteiras (MetaMask) e dApps receberem notificações de eventos de contratos e confirmações de TX em tempo real.
+
+4.  **Formal Verification (Core Audit):**
+    *   **Status:** Planejada.
+    *   **Definição:** Auditoria matemática dos caminhos críticos de transição de estado e verificação de assinaturas PQC.
+
+---
+
+## 🧭 Diretrizes de Evolução (Mandatos)
+
 1. **Besu/Geth como Norte:** Sempre consultar a lógica dessas implementações antes de propor mudanças arquiteturais.
 2. **Desempenho PQC:** O custo computacional do ML-DSA não deve ser subestimado. O paralelismo é a regra.
 3. **Imutabilidade de Finalidade:** O IBFT 2.0 garante finalidade imediata. O código deve impedir qualquer tentativa de reorg em nível de motor.
