@@ -203,10 +203,18 @@ A Jamii implementa o mercado de taxas dinâmicas inspirado na atualização Lond
 3.  **Refund Gas (Estorno):** Gás não utilizado é devolvido: `(GasLimit - GasUsed) * EffectiveGasPrice`.
 4.  **Fee Distribution:** O `BaseFee` é "queimado" e a `PriorityFee` é destinada aos validadores.
 
-### 4.4. Ciclo de Vida de Smart Contracts
+#### 4.4. Ciclo de Vida de Smart Contracts
 *   **Deploy de Contrato (`tx.To == nil`):** Endereço gerado via `Create(sender, nonce)`.
 *   **Chamada de Contrato:** Execução de bytecode contra o estado atual.
 *   **Recibos:** Gerados com `Status`, `GasUsed` e `ContractAddress`.
+
+### 4.5. Política de Pré-compilados Soberanos (Anti-Conflict Strategy)
+Diferente do ecossistema Ethereum que utiliza numeração crescente para novos pré-compilados (0x01, 0x02, 0x03...), a Jamii Blockchain adota uma **Estratégia de Numeração Decrescente**.
+
+*   **Regra de Ouro:** Todos os serviços soberanos da Jamii (Identity Bridge, PQC Validators, etc.) devem ser alocados a partir do final do espaço de endereçamento de 20 bytes.
+*   **Endereço Inicial:** O primeiro pré-compilado soberano (Identity Bridge) ocupa o endereço:
+    `0x000000000000000000000000ffffffffffffffff`
+*   **Motivo:** Esta política garante que a Jamii possa integrar futuros pré-compilados oficiais do Ethereum/Geth/Besu sem necessidade de realocar seus próprios serviços ou causar colisões de endereçamento no StateDB.
 
 ---
 
@@ -308,7 +316,18 @@ A grande inovação da Sprint 5.0 foi a eliminação do gargalo de re-computaç�
 *   **Cálculo Incremental:** O Jamii utiliza a propriedade homomórfica dos compromissos de Pedersen. Ao alterar um valor na folha, o novo compromisso do nó pai é calculado como:
     $$C' = C + (v_{new} - v_{old}) \times G_i$$
     Onde $G_i$ é o ponto gerador pré-computado para a posição $i$. Isso reduz a complexidade de atualização de $O(256)$ para $O(1)$ operações de curva elíptica por nível.
-*   **Busca O(1):** A integração com o **Flat Storage** (Bonsai Turbo) permite que o nó acesse qualquer folha da árvore em tempo constante, sem percorrer os 256 caminhos de ramificação para operações de leitura.
+
+#### Fundamentação do Motor IPA (Inner Product Argument)
+A escolha do esquema de compromisso polinomial (PCS) é o que define a soberania e a escalabilidade da Jamii. Optamos pelo **IPA** em detrimento de alternativas como KZG ou FRI pelos seguintes pilares técnicos:
+
+1.  **Segurança Transparente (No Trusted Setup):** Ao contrário do KZG, que exige uma cerimônia de "Trusted Setup" (risco de governança e segredos tóxicos), o IPA é 100% transparente. Ele utiliza apenas pontos geradores aleatórios na curva elíptica, garantindo que a Jamii nasça sem dependências de confiança em terceiros.
+2.  **Viabilidade Stateless (Logarithmic Proofs):** O IPA oferece provas de tamanho logarítmico $O(\log d)$. Embora o KZG ofereça provas constantes $O(1)$, o IPA é consideravelmente mais eficiente que o FRI (base do STARK) para inclusão em blocos, permitindo que as "Testemunhas de Bloco" (Witnesses) permanecem pequenas o suficiente para viabilizar nós sem disco (Stateless Nodes).
+3.  **A Sinergia com a Curva Bandersnatch (The Performance Fix):** Para mitigar o custo computacional do IPA, o Jamii utiliza a curva **Bandersnatch** (uma curva de Twisted Edwards otimizada). Esta escolha é estratégica por três motivos:
+    *   **Eficiência GLV:** Suporte nativo a endomorfismos acelerados, permitindo multiplicações escalares (base dos compromissos) em tempo recorde.
+    *   **Circuit-Friendliness:** Por ser construída sobre o campo escalar da BLS12-381, a Bandersnatch permite que provas de estado sejam verificadas dentro de circuitos ZK sem o custo proibitivo de aritmética não nativa.
+    *   **Padrão Industrial:** Alinhamento com a pesquisa de ponta global (Ethereum Statelessness), garantindo que a Jamii utilize uma matemática testada para o problema exato de árvores de estado de alta performance.
+
+*Nota sobre Performance:* Reconhecemos o trade-off do custo de verificação linear $O(d)$ do IPA. Para mitigar esse gargalo em futuras fases de escala massiva, o roadmap da Jamii prevê a exploração de técnicas de recursão (como Halo2) para achatar o custo de verificação na camada de finalização.
 
 #### Teoria Homomórfica: Performance vs. Privacidade
 É fundamental distinguir a aplicação do Jamii em relação ao conceito genérico de *Criptografia Homomórfica* (HE).
