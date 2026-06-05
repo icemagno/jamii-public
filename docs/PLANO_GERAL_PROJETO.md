@@ -97,8 +97,11 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
     - [x] Motor de assinatura com *Strong Binding* compatível com o nó Go.
     - [x] Gestão de Keystores industriais (Criptografia AES-GCM com derivação SCrypt).
     - [x] Cliente JSON-RPC tipado para integração com dApps e sistemas legados.
-- [ ] **Sovereign Identity Precompiled:** Implementar contrato pré-compilado em Go (alocado no topo do endereçamento: `0xFF...FF`) para conversão ultra-rápida de `address` (ETH) para `string` (Jamii1/Bech32).
-- [ ] **Jamii Dev Kit (Solidity):** Criar biblioteca de ferramentas oficiais para abstrair chamadas de baixo nível (`staticcalls`) aos pré-compilados da Jamii, garantindo segurança e tipagem forte para desenvolvedores de dApps.
+- [x] **Identity Bridge (Sovereign Precompiled):** Implementação do contrato pré-compilado em Go no endereço `0xFF...FF` para conversão Bech32. [CONCLUÍDO - 05/06/2026]
+- [x] **Sovereign Bridge (Reverse Conversion):** Implementação da decodificação Bech32 no endereço `0xFF...FE` para retorno ao Mirror (0x). [CONCLUÍDO - 05/06/2026]
+- [x] **VM Gas Fix:** Correção da contabilidade de gás para chamadas nativas (Refund System). [CONCLUÍDO - 05/06/2026]
+- [ ] **Jamii Dev Kit (Solidity):** Criar biblioteca de ferramentas oficiais (`Identity.sol`) para abstrair chamadas de baixo nível (`staticcalls`) aos pré-compilados da Jamii, garantindo segurança e tipagem forte para desenvolvedores de dApps.
+- [ ] **Compiler Integration:** Integrar o Jamii Dev Kit ao compilador soberano para resolução automática de imports de sistema.
 - [ ] **Jamii Go SDK:** Unificar as ferramentas de carteira e cliente RPC em um pacote SDK Go reutilizável.
 
 ---

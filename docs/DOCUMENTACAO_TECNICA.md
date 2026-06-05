@@ -211,10 +211,15 @@ A Jamii implementa o mercado de taxas dinâmicas inspirado na atualização Lond
 ### 4.5. Política de Pré-compilados Soberanos (Anti-Conflict Strategy)
 Diferente do ecossistema Ethereum que utiliza numeração crescente para novos pré-compilados (0x01, 0x02, 0x03...), a Jamii Blockchain adota uma **Estratégia de Numeração Decrescente**.
 
-*   **Regra de Ouro:** Todos os serviços soberanos da Jamii (Identity Bridge, PQC Validators, etc.) devem ser alocados a partir do final do espaço de endereçamento de 20 bytes.
-*   **Endereço Inicial:** O primeiro pré-compilado soberano (Identity Bridge) ocupa o endereço:
-    `0x000000000000000000000000ffffffffffffffff`
-*   **Motivo:** Esta política garante que a Jamii possa integrar futuros pré-compilados oficiais do Ethereum/Geth/Besu sem necessidade de realocar seus próprios serviços ou causar colisões de endereçamento no StateDB.
+*   **Regra de Ouro:** Todos os serviços soberanos da Jamii devem ser alocados a partir do final do espaço de endereçamento de 20 bytes.
+*   **Normalização:** A VM utiliza internamente chaves hexadecimais minúsculas sem o prefixo `0x` para busca ultra-rápida no mapa de pré-compilados.
+
+#### Catálogo de Serviços Soberanos:
+1.  **Identity Bridge (`0xFF...FF`):** Converte endereços Mirror (0x) para strings Bech32 (jamii1). Custo: 50 gas.
+2.  **Sovereign Bridge (`0xFF...FE`):** Converte strings Bech32 para o payload Mirror (0x) original. Custo: 50 gas.
+
+#### Correção de Contabilidade de Gás (Refundo Industrial)
+Durante a implementação dos bridges, foi identificada e corrigida uma falha no motor de execução (`executeCall`). Agora, a JamiiVM garante a devolução do `gasLimit` reservado após a execução bem-sucedida de um pré-compilado, cobrando apenas o custo nativo da função. Isso permite chamadas encadeadas de bridges no mesmo bloco sem erros de `Out of Gas`.
 
 ---
 
