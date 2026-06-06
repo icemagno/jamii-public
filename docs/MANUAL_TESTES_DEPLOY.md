@@ -58,3 +58,18 @@ Utilize estes arquivos como gabarito para novos desenvolvimentos:
 
 ---
 *Manual gerado e homologado em 20 de Abril de 2026.*
+*Atualizado em 05 de Junho de 2026 com instruções de Setup de Identidade.*
+
+## 6. Setup de Identidade do Nó (Nova Versão)
+A partir da Sprint 8.2, a Jamii introduziu um comando utilitário para facilitar a criação de identidades sem a necessidade de iniciar o nó completo.
+
+### Gerando Identidade Híbrida (PQC)
+Para gerar uma nova chave privada e obter seu endereço soberano:
+```bash
+jamii setup generate-key --datadir ./data
+```
+**Artefatos Gerados:**
+*   `nodekey`: A chave privada binária (proteja este arquivo!).
+*   `node_address.json`: Manifesto público contendo o `sovereign_address`, `mirror_address` (Ethereum compatible) e a `public_key`.
+
+Este comando deve ser o primeiro passo para qualquer novo validador que deseje coletar seu endereço para inclusão em um arquivo `genesis.json`.

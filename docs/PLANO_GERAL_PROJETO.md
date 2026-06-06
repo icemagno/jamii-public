@@ -134,6 +134,17 @@ Para minimizar a largura de banda durante o consenso sem perder a precisão:
 - [ ] **Mitigação de Colisão:** O espaçamento bi-polar aumenta a entropia em relação a um truncamento sequencial. Caso (raro) ocorra colisão na MemPool do nó receptor, o nó utilizará o `TxRoot` do cabeçalho como prova matemática para rejeitar a montagem incorreta e solicitar a transação específica via P2P.
 - [ ] **Impacto:** Redução de 48 KB para **~9 KB** por bloco (para 1.500 TXs), melhorando a resiliência em redes de alta latência e reduzindo picos de I/O na placa de rede.
 
+### 🛡️ Peer Scoring & Network Protection (Sybil Mitigation)
+- [ ] **Peer Scoring System:** Implementar um motor de reputação que avalia a qualidade dos dados enviados por cada par (DTS/P2P).
+- [ ] **Optimistic Punishment:** Nós (especialmente os Stateless) punem severamente vizinhos que propagam transações inválidas ou esqueletos de blocos malformados.
+- [ ] **Persistent Blacklisting:** Criação de uma lista negra persistente no disco para evitar a reconexão de nós detectados como maliciosos ou spammers.
+- [ ] **Impacto:** Proteção vital para a viabilidade de nós Stateless e para a saúde da MemPool global.
+
+### ⏱️ Otimizações de Latência e Pipeline (High-Speed Throughput)
+- [ ] **Optimistic Block Pre-Assembly:** Pesquisar e implementar a capacidade de o próximo Proposer montar e pré-executar seu bloco em RAM enquanto o bloco atual finaliza seu commit IPA.
+- [ ] **Late-Stamping Header:** Mecanismo para injeção imediata de `ParentHash` e `StateRoot` em blocos pré-montados para reduzir o gap entre rodadas de consenso.
+- [ ] **Impacto:** Redução drástica do tempo de ociosidade da rede, permitindo que a produção de blocos ocorra quase em fluxo contínuo.
+
 ### 🏛️ Arquitetura de Plano Duplo (Dual-Plane Transport)
 Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transporte de dados:
 
@@ -177,6 +188,24 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 - [ ] **Formal Verification:** Auditoria matemática dos caminhos críticos.
 - [ ] **Penetration Testing:** Simulação de ataques bizantinos.
 - [ ] **Mainnet Genesis:** Materialização do bloco zero oficial.
+
+---
+
+## ⚡ Fase 9: Aceleração de Quórum por Witness (PRÓXIMA SPRINT)
+*Objetivo:* Eliminar o gargalo de CPU/IPA na rede através da verificação assimétrica.
+
+### 🚀 Sprint 9.1: Otimização do StateProcessor
+- [ ] **Modo de Validação Stateless:** Adaptar o `pkg/core/processor.go` para aceitar uma `Witness` opcional durante a execução de blocos recebidos via P2P.
+- [ ] **RAM-First Execution:** Se uma Witness estiver presente, o processador deve priorizar os dados da testemunha em vez de consultar o PebbleDB local, economizando ciclos de I/O.
+
+### 🛡️ Sprint 9.2: Protocolo "Bala na Agulha" (Safety)
+- [ ] **Deferred Commit:** Refatorar o `consensus/ibft/controller.go` para segurar o `Commit()` de disco até a finalização do quórum total de mensagens `COMMIT`.
+- [ ] **Witness Injection:** Alterar o Proposer para gerar e anexar a prova Verkle/IPA (Witness) no momento do `PRE-PREPARE`.
+
+### 🧪 Sprint 9.3: Witness para Storage e Otimização Binária
+- [ ] **Storage Slot Tracking:** Atualizar o `StateDB` para incluir slots de storage na Witness gerada pelo Proposer.
+- [ ] **Binary Serialization:** Substituir o formato JSON por uma codificação binária estrita (PPQ/SSZ) para minimizar o peso do Skeleton Block.
+- [ ] **Suporte a Contratos Complexos:** Validar a aceleração de quórum em blocos que realizam múltiplas chamadas `SSTORE/SLOAD`.
 
 ---
 

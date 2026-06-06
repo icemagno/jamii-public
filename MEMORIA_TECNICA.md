@@ -15,12 +15,22 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
 
 - **Concluído:** Unified Identity, **Sovereign Transaction V1 (EIP-1559 Native)**, Mirroring nativo de saldo, Dívida Técnica Bloqueante (Gas Price, ReceiptsRoot, Buy Gas, VM Integration, JSON-RPC Read-only), Rede P2P (DTS Engine), MemPool (Gestão de transações pendentes com Purga Descendente), Sincronismo Determinístico (Besu-style), Conformidade Industrial IBFT2 (Pacing, Configurable Timeouts), Segurança Sync-to-Consensus (Observer Mode), Saneamento de Logs (Critical Level), Ghost Root Killer (Determinismo de Blocos Vazios), Resiliência de Sincronia (Channel Drainage), Compactação Soberana (Storage Optimization), Tsunami PQC Test (10.000 TXs Sustentadas), **Blindagem de Mercado (London/Besu Logic)**, **Otimização de Cache Industrial (MaxWarmTries Guard)** e **Sincronização Atômica Sync-Consensus (Anti-Self-Sabotage).**
 
-## 🛠️ Decisões Recentes (03/06/2026)
-1. **Blindagem de Memória e Slots (Mempool Resilience V1):**
-    - **Ação:** Implementada proteção de "Portão Duplo" na MemPool, limitando tanto a quantidade de transações (`MaxMempoolSlotSize`) quanto o consumo real de RAM (`MaxMempoolMemorySize`).
-    - **Lógica de Expulsão Híbrida:** O nó agora realiza expulsão em loop (AllHeap) até que ambos os critérios de saúde sejam restabelecidos, priorizando transações de maior valor econômico.
-    - **Anti-OOM:** Adicionada validação *check-first* que rejeita transações individuais que sozinhas excedam o limite total de memória da pool.
-    - **Resultado:** Garantia de que o nó Jamii permaneça operacional sob ataques de flood massivo, com consumo de RAM previsível e proteção contra exaustão de CPU por validações inúteis.
+## 🛠️ Decisões Recentes (05/06/2026)
+1. **Pivot Arquitetural: Descarte da Execução Especulativa:**
+    - **Contexto:** Tentativa de paralelizar a execução do bloco $N+1$ durante o commit do bloco $N$.
+    - **Conclusão:** **Fracasso definitivo.** A dependência sequencial de estado impede a especulação segura; a execução sobre estados "fantasmas" gera divergência de StateRoot.
+    - **Descoberta de Gargalo:** O limite de performance não é o disco (SSD), mas o custo de CPU para **geração de provas IPA** (CPU-bound). O sistema gasta mais tempo "calculando a árvore" do que "gravando no banco".
+    - **Mandato:** Focar em otimizações matemáticas (MSM/Pippenger) e na hierarquia de nós Stateless em vez de paralelismo especulativo.
+
+2. **Estratégia de Rede Híbrida (Stateless Hierarchy):**
+    - **Definição:** Proposers são nós Stateful de alta performance (HPC) que geram a **Block Witness**.
+    - **Nós de Borda:** Implementação de nós Stateless que utilizam a Witness do Skeleton para verificação ultra-rápida, eliminando a necessidade de armazenamento local massivo.
+    - **MemPool Otimista:** Nós Stateless não aceitam TXs via RPC, confiando na filtragem prévia dos nós Stateful (P2P-only ingress) para mitigar ataques de DoS.
+    - **Peer Scoring:** Implementação obrigatória de motor de reputação e lista negra para isolar vizinhos maliciosos.
+
+3. **Saneamento de Configuração e Setup:**
+    - **Ação:** Remoção completa do campo `network_mode` (redundante).
+    - **Novo Utilitário:** Implementado `jamii setup generate-key` para criação autônoma de identidades híbridas PQC.
 
 ## 🛠️ Decisões Recentes (03/06/2026)
 1. **Refatoração do Motor Verkle (Deadlock & Atomicidade):**
@@ -34,8 +44,6 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
     - **Lógica de Expulsão Híbrida:** O nó agora realiza expulsão em loop (AllHeap) até que ambos os critérios de saúde sejam restabelecidos, priorizando transações de maior valor econômico.
     - **Anti-OOM:** Adicionada validação *check-first* que rejeita transações individuais que sozinhas excedam o limite total de memória da pool.
     - **Resultado:** Garantia de que o nó Jamii permaneça operacional sob ataques de flood massivo, com consumo de RAM previsível e proteção contra exaustão de CPU por validações inúteis.
-
-## 🛠️ Decisões Recentes (28/05/2026)
 1. **Ultra-Compactação de Rede (Bi-Polar Short IDs):**
     - **Ação:** Migração dos Skeleton Blocks para serialização binária usando identificadores de 6 bytes (3 iniciais + 3 finais do TxHash) no lugar de hashes de 32 bytes.
     - **Motivo:** Eliminar o overhead de banda em blocos grandes (1.5k TXs) que geravam pacotes de rede pesados (>48KB).
