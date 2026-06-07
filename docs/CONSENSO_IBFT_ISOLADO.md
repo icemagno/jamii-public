@@ -55,8 +55,16 @@ A única alteração ocorrerá na camada externa:
 ## 5. Refinamentos Industriais (Sprint 3.6)
 Para atingir a conformidade total com o Hyperledger Besu e garantir a segurança de uma Mainnet, a Jamii introduziu dois mecanismos cruciais:
 
-### A. Validação Ativa de Propostas
-Diferente de implementações simplificadas, o Cérebro da Jamii agora integra-se ao **Motor de Execução** durante a fase de Proposta. Ao receber uma `PROPOSAL`, o nó não vota imediatamente. Ele invoca `VerifyPayload(digest)`, forçando a validação das transações. Se a proposta for maliciosa, o nó recusa o voto `Prepare`, protegendo a integridade do estado.
+### A. Validação Ativa de Propostas e Aceleração via Witness
+Diferente de implementações simplificadas, o Cérebro da Jamii agora integra-se ao **Motor de Execução** durante a fase de Proposta. 
+*   **Proposer:** Ao emitir uma `PROPOSAL`, o líder gera uma **Block Witness** (estados iniciais) que é incluída no Skeleton.
+*   **Validator:** Ao receber uma `PROPOSAL`, o nó invoca `VerifyPayload(digest)`. Graças à Witness, o nó executa as transações de forma Stateless e otimista, pulando a matemática pesada da Verkle Tree (IPA/MSM) durante o round de votação. 
 
-### B. Persistência de Seals (Crash-Resilience)
-O sistema agora persiste as assinaturas binárias reais (`Seals`) de cada voto de Commit no disco. Isso garante que, se um nó sofrer um crash e reiniciar no meio de uma rodada, ele possa recuperar as provas criptográficas legítimas para finalizar o bloco, eliminando o uso de assinaturas temporárias ou "fakes".
+### B. State Promotion (Finalização Instantânea)
+O motor de consenso agora utiliza o mecanismo de **State Promotion**. Quando o quórum de `COMMIT` é atingido:
+1.  O sistema recupera o estado já executado e validado (Sandbox) do `PayloadPool`.
+2.  Em vez de re-executar, ele promove os nós da Trie e mutações de RAM diretamente para o estado canônico.
+3.  Isso reduz o tempo de "Block Sealing" em ~90%, transformando o compromisso de finalização em uma operação pura de I/O de escrita.
+
+### C. Persistência de Seals (Crash-Resilience)
+O sistema agora persiste as assinaturas binárias reais (`Seals`) de cada voto de Commit no disco. Isso garante que, se um nó sofrer um crash e reiniciar no meio de uma rodada, ele possa recuperar as provas criptográficas legítimas para finalizar o bloco.

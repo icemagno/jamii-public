@@ -102,14 +102,14 @@ graph TD
     style DB fill:#fff,stroke:#333,stroke-width:2px
 ```
 
-## 7. O Princípio do Staging (Minerador vs. Validador)
+## 7. O Princípio do Staging e State Promotion (Otimização Soberana)
 
-Para evitar o "envenenamento" do banco de dados com blocos inválidos, a Jamii segue o fluxo de **Staging**:
+Para evitar a re-execução redundante e o custo de CPU da Verkle Tree, a Jamii utiliza um fluxo de **Staging Avançado**:
 
-1.  **Modificações em Memória:** Durante a execução das transações (`ApplyTransaction`), o `StateDB` mantém as mudanças no **Dirty Set** (RAM) e registra as reversões no **Journal**.
-2.  **Cálculo da Raiz:** O sistema solicita à SMT a nova raiz baseada nas mudanças pendentes.
-3.  **A Prova de Fogo:** O `StateProcessor` compara a raiz calculada com a `StateRoot` do Header.
-4.  **Efetivação (Commit):** Somente se os hashes forem idênticos, o sistema chama o `Commit()` do banco de dados, persistindo os dados no SSD de forma atômica. Se houver divergência, o rascunho é descartado e o banco oficial permanece intacto.
+1.  **Execução em Sandbox (GetPayload/Verify):** O Proposer (ao montar o bloco) e os Validadores (ao verificar a proposta) executam as transações em um `StateDB` isolado (Sandbox).
+2.  **Cálculo da Raiz e IPA:** O sandbox gera a `StateRoot` e calcula todos os compromissos IPA da Verkle Tree, armazenando-os em um `OverlayStore` em RAM.
+3.  **Promoção de Estado (O Pulo do Gato):** No momento da finalização (Commit), o sistema não re-executa o bloco. Ele utiliza o método `Promote()`, que move os nós da Trie e os estados das contas do Sandbox diretamente para o banco canônico.
+4.  **Efetivação Instantânea:** O `Commit()` final torna-se apenas uma operação de escrita de disco (I/O plano), pois a matemática pesada já foi resolvida e "promovida" da fase de consenso.
 
 ---
 

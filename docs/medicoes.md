@@ -1,4 +1,23 @@
 ================================================================================
+🚀 JAMII SOVEREIGN FLOOD TEST - RECORD DE TPS (SPRINT 9.2)
+Data: 06/06/2026 | Escopo: Estabilidade Industrial com 3k TX/Bloco
+================================================================================
+Monitorando o throughput máximo real em cluster de 4 validadores ativos.
+Config: 3.000 TXs/Bloco | BP: 3s | RT: 6s | DTS WriteDeadline: 10s
+--------------------------------------------------------------------------------
+[FINAL REPORT]
+- Total Successful TXs:  10.000
+- Final Avg TPS:         ~454.5 TX/s (Recorde)
+- Block Time (Avg):      3.0s (Sincronia Perfeita)
+- Peak Throughput:       600 TX/s (Medido em janelas de blocos cheios R:0)
+--------------------------------------------------------------------------------
+✅ STATUS: Recorde de performance atingido. Consenso operando 100% em Rodada 0.
+🚀 DESTAQUE: Aumentar o DTS WriteDeadline para 10s eliminou as desconexões de peers.
+🛠️ OTIMIZAÇÃO: Identificada a necessidade de estabilizar o quórum P2P antes de 
+           iniciar o flood para evitar o modo "Catch-up" desnecessário.
+
+
+================================================================================
 🚀 JAMII BI-POLAR SKELETON TEST - EFICIÊNCIA DE BANDA (SPRINT 8.1)
 Data: 28/05/2026 | Escopo: Ultra-Compactação de Rede | Status: SUCESSO ABSOLUTO
 ================================================================================

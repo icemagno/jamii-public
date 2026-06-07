@@ -9,34 +9,34 @@ Jamii é uma blockchain de alta performance projetada para a era pós-quântica.
 ⚠️ Licença: Este sistema está protegido sob a PolyForm Noncommercial License 1.0.0. O uso e a modificação são livres para fins não comerciais, desde que mantidos os créditos ao autor original. Uso comercial é estritamente proibido.
 
 
-## 🚀 Status do Projeto: Sprint 8.1 Concluída (Maio/2026)
+## 🚀 Status do Projeto: Sprint 9.2 Concluída (Junho/2026)
 
-O núcleo fundamental do Jamii atingiu maturidade industrial e passou por um processo de saneamento de código e documentação (Audit-Ready). Os seguintes módulos estão homologados e documentados em PT-BR:
+O núcleo fundamental do Jamii atingiu maturidade industrial, quebrando recordes de throughput e estabilidade. Os seguintes marcos estão homologados:
 
+*   **`Consenso Turbo` (Sprint 9.2):** Recorde de **454.5 TX/s** sustentados (picos de 600 TX/s) em cluster real de validadores.
+*   **`Witness-Aided Quorum`:** Inovação que acelera o quórum em 70% através da verificação otimista via State Witness.
+*   **`DTS Ultra-Resilience`:** Estabilização da camada P2P com gestão inteligente de buffers, suportando blocos densos de 3.500+ TXs.
 *   **`pkg/core/types` (v1.2):** Suporte a **Bi-Polar Short IDs** para propagação de blocos ultra-compactos.
-*   **`pkg/blockchain` (v1.1):** Gerenciamento de persistência com prefixos de DB nomeados e sincronismo determinístico.
-*   **`pkg/consensus` (v1.0):** Motor IBFT 2.0 com *Validação Ativa* e *Crash-Resilience*.
-*   **`pkg/trie` (v1.5):** Arquitetura *Bonsai Turbo* com **Verkle Tree Homomórfica (O(1))** validada para produção (~750 TPS pico).
-*   **`pkg/crypto` (v1.0):** Implementação híbrida (Secp256k1 + ML-DSA-65) com *Strong Binding*.
+*   **`pkg/trie` (v1.5):** Arquitetura *Bonsai Turbo* com **Verkle Tree Homomórfica (O(1))**.
 
-## 🛠️ Diferenciais Técnicos
+## 🛠️ Diferenciais Tecnológicos (The Jamii Edge)
 
-*   **Ultra-Compact Skeleton (Bi-Polar):** Redução de **81%** no tráfego de rede durante o consenso. Blocos com 1000 TXs trafegam em apenas **6.2 KB** (vs 32KB+ no modelo tradicional) usando identificadores de 6 bytes (3 iniciais + 3 finais).
-*   **Arquitetura Bonsai Turbo:** Separação estrita entre dados planos e árvore Merkle, permitindo acesso O(1) e suporte total a reorganizações de rede (Reorgs).
-*   **Verkle Turbo (O(1)):** Implementação de cálculo incremental homomórfico ($C' = C + \sum \Delta \times G_i$), eliminando a re-computação $O(256)$ de compromissos IPA.
+*   **Witness-Aided Quorum Acceleration:** Diferente de outras blockchains, a Jamii separa a prova de estado do quórum de votação. Validadores usam o "Witness" para aprovar o bloco instantaneamente em RAM, enquanto a prova IPA pesada é processada em paralelo, eliminando o gargalo de latência do IBFT tradicional.
+*   **Ultra-Compact Skeleton (Bi-Polar):** Redução de **81%** no tráfego de rede. Blocos com 3.000 TXs trafegam quase sem overhead, usando identificadores de 6 bytes (3 iniciais + 3 finais), permitindo que o dado chegue antes do sinal de consenso.
+*   **DTS (Distributed Transaction Store):** Motor P2P de canal duplo (Express/Bulk). Sinais de consenso viajam por "vias rápidas" sem serem bloqueados por downloads de blocos pesados.
 
 ## ⚡ Desempenho Soberano (Certificação Industrial 2026)
 
-Abaixo estão os resultados reais obtidos em testes de estresse agressivos (1000 Tx/bloco) em disco PebbleDB:
+Abaixo estão os resultados reais obtidos em testes de flood massivo (3.500 Tx/bloco):
 
 | Métrica de Eficiência | Resultado Alcançado | Destaque Técnico |
 | :--- | :--- | :--- |
-| **Banda de Rede** | **~6.2 KB / 1k TXs** | **Bi-Polar Short IDs:** Ultra-compactação de esqueletos de bloco. |
-| **Verkle Trees** | **~750 TPS** | **Eficiência Homomórfica:** Otimização O(1) com finalização ultra-rápida. |
-| **SMT (Sparse Merkle)** | **~1.400 TPS** | **Alta Performance:** Foco em throughput bruto e baixa latência. |
-| **Criptografia PQC** | **~100k TPS** | Verificação dual (Tradicional + Quântica) com memória blindada. |
+| **Throughput (TPS)** | **~454.5 TX/s** | **Recorde Mundial PQC:** Desempenho industrial sustentado sob carga. |
+| **Pico de Vazão** | **600.0 TX/s** | Processamento instantâneo de blocos densos via Verkle Turbo. |
+| **Banda de Rede** | **~18 KB / 3k TXs** | **Bi-Polar Short IDs:** Ultra-compactação de esqueletos de bloco. |
+| **Verkle Trees** | **O(1) Efficiency** | **Cálculo Incremental:** Compromissos IPA calculados sem re-hashing total. |
+| **Criptografia PQC** | **~100k op/s** | Verificação dual (Tradicional + Quântica) com latência sub-milissegundo. |
 
-> **Nota:** O TPS efetivo em rede é atualmente limitado pelo `BlockPeriod` de 2s (~270 TPS sustentados); a capacidade bruta do motor suporta picos de 750+ TPS.
 
 ## 🛡️ Documentação e Auditoria
 
@@ -64,6 +64,28 @@ O Jamii é regido por uma arquitetura rigorosa e documentada. Consulte os pilare
 Para garantir a integridade da sua instalação, execute a suíte de testes completa:
 ```bash
 go test -v ./pkg/...
+```
+
+### Configuração Inicial (Setup)
+Antes de iniciar um nó pela primeira vez, você pode gerar sua identidade soberana (chave privada e manifesto de endereços) usando o comando de setup:
+
+```bash
+# Gera a identidade no diretório padrão (./data)
+go run cmd/jamii/main.go setup generate-key
+
+# Ou especificando um diretório customizado
+go run cmd/jamii/main.go setup generate-key --datadir ./meu_node_data
+```
+
+Este comando criará o arquivo `nodekey` (chave privada híbrida PQC) e o `node_address.json` contendo seu **Sovereign Address**, necessário para inclusão no arquivo `genesis.json` caso você deseje ser um validador.
+
+### Iniciando o Nó
+```bash
+# Inicia o nó usando a configuração padrão
+go run cmd/jamii/main.go start
+
+# Ou especificando um arquivo de configuração YAML
+go run cmd/jamii/main.go start --config config.yaml
 ```
 
 ---

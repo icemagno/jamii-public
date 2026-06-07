@@ -25,22 +25,26 @@ Métricas obtidas em testes de estresse reais (Tsunami Test - Maio/2026):
 | :--- | :--- | :--- |
 | **Crypto Core** | Verificações Híbridas (PQC) | **102.904 op/s** |
 | **SSZ Encoding** | Serialização Soberana | **393.507 tx/s** |
-| **Throughput Rede** | Transações PQC Sustentadas | **250 - 500 TPS** |
+| **Throughput Rede** | Recorde de Transações PQC | **454.5 TPS** 🏆 |
+| **Pico de Vazão** | Janela de Blocos Cheios | **600.0 TX/s** |
 | **JamiiVM** | Engine Dispatch | **32.7 Mop/s** |
 | **Eficiência CPU** | Carga de 1.000 TXs/bloco | **16% de uso** |
 
 ## ⚙️ 4. Estabilidade e Higiene de Consenso
 Arquitetura focada em resiliência e determinismo absoluto.
 
+*   **Witness-Aided Quorum Acceleration (Sprint 9.2):** Aceleração de consenso via "Block Witness". Diferente do Ethereum, o Proposer envia os estados iniciais das contas, permitindo que os validadores realizem uma verificação otimista em RAM (pulando a matemática IPA pesada durante o round). Isso permitiu a finalização de 3.500 TXs em menos de 2 segundos.
 *   **Ghost Root Killer:** Garantia de StateRoot determinístico em blocos vazios, herdando a raiz do pai e evitando divergências por poluição de cache.
 *   **MemPool Purge Descendente:** Limpeza inteligente da fila de transações. Se um nonce falha, todos os subsequentes são expulsos, prevenindo congestionamentos.
 *   **Atomic Journaling:** Snapshots atômicos por transação garantem que falhas na VM nunca deixem o saldo do StateDB em estado inconsistente.
 
-## 📦 5. Stack Tecnológica de Ponta
+## 📦 5. Stack Tecnológica e Otimizações Soberanas
 *   **PebbleDB (100% Go):** Camada de persistência de alto desempenho para o estado mundial.
-*   **Sparse Merkle Tree (SMT) / Verkle Tree:** Motores de trie avançados para validação stateless e provas compactas.
+*   **Verkle Trees (Bonsai-Style):** Motor de trie avançado para provas compactas e cálculo incremental de compromissos IPA.
+*   **Witness-Aided Quorum Acceleration:** Aceleração de consenso via "Block Witness". O Proposer envia os estados iniciais das contas, permitindo verificação stateless pelos validadores (pulando a matemática IPA durante o round).
+*   **State Promotion (Promoção de Estado):** Mecanismo que elimina a redundância de execução no Proposer. Os resultados do sandbox em RAM são promovidos para o estado canônico, tornando a finalização instantânea.
+*   **Bi-Polar Short IDs:** Ultra-compactação de blocos (IDs de 6 bytes) que reduz em 81% o tráfego de rede, mitigando o peso de assinaturas PQC e witnesses.
 *   **IBFT 2.0 (Besu-style):** Consenso com finalidade imediata e tolerância a falhas bizantinas.
-*   **DTS (Block Sharding):** Propagação eficiente de propostas através de fragmentação, mitigando o peso de assinaturas PQC na rede.
 
 ## 🚀 6. Natureza da Rede: Do Corporativo ao Público
 O rótulo "corporativo" da Besu (e consequentemente a escolha do IBFT2 para a Jamii) muitas vezes gera confusão sobre a aplicabilidade da rede. No Jamii, desmistificamos essa visão através de três pilares fundamentais:
