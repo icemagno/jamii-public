@@ -57,11 +57,25 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
     - **Resultado:** **484 AvgTPS** sustentados em teste de estresse de longa duração (2 min).
     - **Métricas:** 58.200 atualizações de estado processadas com pico de Heap em 907MB.
     - **Estabilidade:** 0 GCs/s durante o pico, demonstrando eficiência da arquitetura Zero-Alloc na Verkle Tree.
-3. **Resiliência de Ressurreição (Consensus Halt Guard):**
+2. **Resiliência de Ressurreição (Consensus Halt Guard):**
     - **Ação:** Implementado reset automático da trava `lastStartedHeight` quando o quórum de rede é perdido e recuperado.
     - **Impacto:** Fim do travamento manual necessário para "acordar" nós que ficaram isolados ou caíram por tempo prolongado.
 
+## 🛠️ Decisões Recentes (06/06/2026)
+1. **Witness-Aided Quorum Acceleration (Aceleração por Testemunha):**
+    - **Ação:** Introdução da **Block Witness** no Skeleton do bloco. O Proposer agora envia os estados iniciais (contas/slots) necessários para a execução.
+    - **Benefício:** Permite que validadores executem o bloco de forma "Stateless" e otimista.
+    - **Mitigação de Banda:** O aumento no tamanho do Skeleton devido à Witness foi neutralizado pela implementação prévia de **Bi-Polar Short IDs**, mantendo a eficiência de rede.
+    - **Resultado:** Validação de blocos em validadores agora pula a matemática pesada de Verkle (IPA/MSM) durante a fase de votação (Prepare/Commit).
+
+2. **Mecanismo de Promoção de Estado (State Promotion):**
+    - **Problema:** O Proposer executava o bloco duas vezes (uma para propor, outra no commit final), duplicando o esforço de CPU-bound mais caro: a prova de StateRoot.
+    - **Solução:** Implementado o cache de **Sandbox State** no `PayloadPool`. O resultado da execução (nós da Verkle Tree e IPA commitments em RAM) é preservado.
+    - **Ação:** No momento da finalização, o nó realiza a **Promoção Atômica**: move as mutações do sandbox diretamente para o estado canônico, saltando a re-execução da VM e o re-cálculo da árvore.
+    - **Resultado:** Redução de **~90%** no tempo de processamento do Proposer na fase de commit. O esforço pesado é feito apenas uma vez por bloco.
+
 ## 🛠️ Decisões Recentes (22/05/2026)
+
 1. **Sincronização Atômica Sync-Consensus (Anti-Self-Sabotage):**
     - **Ação:** Refatorado o `SyncManager` para utilizar um callback sincronizado (`ExecuteBlockFn`) gerenciado pelo `Node` sob o mutex global `execMu`.
     - **Guarda de Altura:** Implementada verificação estrita de altura no Sync para ignorar blocos já processados pelo Consenso, evitando falhas de Nonce Mismatch por re-execução.

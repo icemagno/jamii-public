@@ -1,0 +1,140 @@
+{
+  "config": {
+    "chainId": "2026",
+    "isFreeGas": false,
+    "treeType": 1,
+    "blockPeriod": 3,
+    "requestTimeout": 8,
+    "maxTxsPerBlock": 2500,
+    "maxMempoolSlotSize": 10000,
+    "maxMempoolMemorySize": 536870912
+  },
+  "initialBaseFee": "1000000000",
+  "timestamp": 1746758400,
+  "gasLimit": 30000000,
+  "alloc": {
+    "0xD4A9fF65b636433A12AA91f9adC6Eeb3D8b6BE30": {
+      "balance": "500000000000000000000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "0xa660f35cb1d29acd4ab4771df5ea44fa06202228": {
+      "balance": "1000000000000000000000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1z9vqgp9n6hzju4ctv5ypnqct9h3e6p94j94de47": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zafhnd2fxk0k6ggs72cf56ed74aj9xhm5wj659d": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zcs8drzraxxwegxnqt52s6h5v34pqcwanhqr3xw": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zf3lae2zx2celpdqhlfm09enxyrde2ke5rrkcqu": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zgt2ck77cjas0x0m3hsha9ljn3pgpke7gdafx3p": {
+      "balance": "1000000000000000000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zhm96ly8dmkk6mqqtd69c9uzrr27rzg0lmc6jnl": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zkm27uu8j0s6ea66nwjrmurt40q50ppanrmvulw": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zlgl9pz9asu3xmly75le0rf6wm9ljaxt4qsqxg3": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zlmcgxvr8hzw3ykhlg97u6jak8p3kr26wvmy9qd": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zr4srg8w827c8lj09ysew5964wtcr05uu2q609k": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zus4yfxt3j3260nkglpr92vn6fz4f62h5qt3pal": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zv9t899hffmp3gt380kfakc9zzakha5gjkpxktp": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zw80q5a2stv4aflepc6r9jq3w0xlc0yg44qtg7a": {
+      "balance": "1000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v": {
+      "balance": "1000000000000000000000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zuvazgdzum43rjx5v23ldufw3a6gfk2f3mjkxu5": {
+      "balance": "1000000000000000000000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zj5nhccs62hsp44j3tqln7a8r58vr5fxhsu7f5g": {
+      "balance": "91000000000000000000000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    },
+    "jamii1zryc0mck309ve9d2predwz76errgpducq6wyt0c": {
+      "balance": "91000000000000000000000000000",
+      "nonce": 0,
+      "code": null,
+      "storage": null
+    }
+  },
+  "validators": [
+    "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v",
+    "jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74",
+    "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05",
+    "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5",
+    "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0",
+    "jamii1z9eyprqmvjmtettl2r54fvutqtygqyqkxc6hwx0",
+	"jamii1zfa7dw2qslpsl2m3jqzv505vv78kdgq0pgz4uep"
+  ]
+}
