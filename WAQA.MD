@@ -29,10 +29,10 @@ Aqui está a comparação técnica de por que o bloco da Jamii é superior em ef
 
   No WAQA, o Proponente (Leader) faz o trabalho pesado de gerar a prova IPA (Inner Product Argument). Ele envia o bloco com um Witness (Testemunha). O
   Validador faz o seguinte:
-   1. Executa as transações na EVM (isso garante que as regras de negócio, saldos e permissões foram respeitados).
-   2. Usa o Witness para pré-carregar os valores da Verkle Tree na RAM.
-   3. Verifica se o resultado da execução bate com o que o Witness afirma.
-   4. A sacada: O validador pula apenas a matemática transcendental das curvas elípticas (IPA) para fechar a raiz durante o round de votação, mas ele não
+   a. Executa as transações na EVM (isso garante que as regras de negócio, saldos e permissões foram respeitados).
+   b. Usa o Witness para pré-carregar os valores da Verkle Tree na RAM.
+   c. Verifica se o resultado da execução bate com o que o Witness afirma.
+   d. A sacada: O validador pula apenas a matemática transcendental das curvas elípticas (IPA) para fechar a raiz durante o round de votação, mas ele não
       pula a execução das transações.
 
 5. A Âncora do Quórum IBFT 2.0
