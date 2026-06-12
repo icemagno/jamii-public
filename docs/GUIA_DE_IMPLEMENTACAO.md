@@ -12,7 +12,7 @@ Diferente do Geth, o Jamii deve suportar hashes de tamanhos variáveis. Portanto
 type Header struct {
     ParentHash  types.Hash // Hash do bloco anterior
     Number      *big.Int   // Altura do bloco na cadeia
-    StateRoot   types.Hash // Raiz da SMT após execução do bloco
+    StateRoot   types.Hash // Raiz da Trie de estado (Verkle/SMT) após execução do bloco
     TxRoot      types.Hash // Raiz Merkle das transações (opcional, pode ser Hash do lote)
     ReceiptRoot types.Hash // Raiz Merkle dos recibos
     Coinbase    types.Hash // Endereço do validador que selou o bloco
@@ -110,7 +110,7 @@ Permite localizar instantaneamente um recibo ou bloco a partir de um TxHash:
 Os offsets no SSZ do Header devem ser dinâmicos para aceitar hashes de 32 ou 64 bytes sem quebrar o parser.
 
 ---
-**Diretriz de Performance:** A leitura de saldo deve ser O(1). Nunca permita que a VM percorra a SMT durante a execução de transações normais. A árvore Merkle serve para **Provas**, a tabela plana serve para **Estado**.
+**Diretriz de Performance:** A leitura de saldo deve ser O(1). Nunca permita que a VM percorra a Trie de estado (Verkle/SMT) durante a execução de transações normais. A árvore Merkle/Verkle serve para **Provas**, a tabela plana serve para **Estado**.
 
 ---
 **Dica para o Programador:** Use o padrão de "Double-Check Locking" para o cache de hash do bloco, conforme visto no módulo de `encoding`. Não esqueça de fechar os iteradores do PebbleDB ao buscar blocos por intervalo.

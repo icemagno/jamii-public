@@ -61,7 +61,7 @@ Uma das maiores inovações do Jamii é a eliminação total do conceito de "Sha
 
 #### O Elo Matemático (20-byte Anchor)
 Diferente de sistemas que exigem uma migração ou resgate de fundos, no Jamii os endereços Soberanos (`v1`) e os endereços Mirror (`v0`) compartilham o **mesmo payload de 20 bytes**. Este payload é derivado da parte clássica (Secp256k1) da chave pública híbrida.
-*   **Consequência:** Ambos os endereços apontam para a **mesma folha** na Sparse Merkle Tree (SMT).
+*   **Consequência:** Ambos os endereços apontam para a **mesma folha** no World State (seja na Trie Verkle ou SMT).
 *   **Mão Dupla Nativa:** Se um usuário recebe tokens em seu endereço `0x...`, o saldo é imediatamente visível e acessível através de seu endereço `jamii1...`. Não há "gavetas" separadas ou necessidade de mover fundos entre versões.
 
 #### O Reveal de Segurança
@@ -101,10 +101,10 @@ Antes do envelope ser aceito, um guarda verifica se a assinatura é sua mesmo us
     *   Se alguém tentar usar apenas a chave comum, a porta não abre. 
     *   Mesmo que no futuro alguém invente uma super-máquina para quebrar o cadeado comum, o segundo cadeado (Pós-Quântico) continuará segurando a porta sozinho.
 
-**Passo 4: O Grande Livro de Contabilidade (SMT - Árvore de Estado)**
+**Passo 4: O Grande Livro de Contabilidade (Trie de Estado - Verkle / SMT)**
 Depois de verificado, o sistema precisa anotar: "Você agora tem 10 a menos, e seu amigo tem 10 a mais".
-*   **O que construímos:** O `pkg/trie` (SMT).
-*   **Como funciona:** Imagine um armário gigante com bilhões de gavetas. A nossa **SMT** é o sistema que sabe exatamente em qual gaveta está o seu saldo. Ela é "Sparse" (Esparsa) porque, embora tenha bilhões de gavetas possíveis, ela só ocupa espaço na memória com as gavetas que realmente têm dinheiro dentro.
+*   **O que construímos:** O `pkg/trie` (Trie Factory com Verkle/SMT).
+*   **Como funciona:** Imagine um armário gigante com bilhões de gavetas. A nossa **Trie de Estado** é o sistema que sabe exatamente em qual gaveta está o seu saldo. Ela utiliza o padrão **Verkle Trees** como motor padrão para gerar provas ultra-compactas (ou opcionalmente **SMT**). Ela só ocupa espaço físico na memória com as gavetas que realmente contêm dados.
 
 ### 3.2. Tirando as Suas Dúvidas
 
@@ -247,7 +247,7 @@ A identidade no Jamii utiliza o formato **Bech32** (conforme BIP-0173) para ende
 **Mirroring Seguro (Compatibilidade Ethereum)**
 Para interoperabilidade com a EVM, o Jamii gera um **Mirror Address (0x...)**.
 *   **Lógica Industrial:** `Mirror = EIP55(V2_Payload)`.
-*   **Identidade Única:** Como o Mirror e o Soberano compartilham o mesmo payload, eles apontam para a mesma folha na SMT, garantindo unificação de saldo.
+*   **Identidade Única:** Como o Mirror e o Soberano compartilham o mesmo payload, eles apontam para a mesma folha na Trie de estado (Verkle/SMT), garantindo unificação de saldo.
 
 ### 5.2. Criptografia e Identidade (`pkg/crypto`)
 O Jamii opera em um modelo de **Segurança Pós-Quântica Híbrida**.

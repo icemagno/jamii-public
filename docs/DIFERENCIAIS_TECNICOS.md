@@ -15,7 +15,7 @@ Enquanto a maioria das redes atuais (Ethereum, Solana, etc.) é vulnerável ao *
 O Jamii elimina a necessidade de "Contas de Sombra" ou migrações complexas de saldo ao evoluir a segurança.
 
 *   **20-byte Payload Anchor:** Endereços **V0 (Mirror/0x)**, **V1 (Legacy)** e **V2 (Sovereign/jamii1)** compartilham o mesmo payload derivado da Secp256k1.
-*   **Unificação de Estado:** Diferentes representações (Bech32 e Hex) apontam para a **mesma folha** na Sparse Merkle Tree (SMT).
+*   **Unificação de Estado:** Diferentes representações (Bech32 e Hex) apontam para a **mesma folha** no World State (seja na Trie Verkle ou SMT).
 *   **Compatibilidade Nativa:** O saldo recebido em um endereço Ethereum (0x) é imediatamente acessível e protegido pela identidade quântica (V2).
 
 ## ⚡ 3. Performance Industrial Homologada

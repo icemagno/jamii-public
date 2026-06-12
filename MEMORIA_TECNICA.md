@@ -6,14 +6,42 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
 - **VM:** Ordem LIFO (Top op Next), aritmética industrial, flags de overflow integradas no `types`. 
 - **Criptografia:** Híbrida (ML-DSA + Secp256k1). Identidade soberana e mirror (0x) compartilham o mesmo payload de 20 bytes derivado da Secp256k1.
 - **Endereçamento:** `jamii1...` (Sovereign) e `0x...` (Mirror/EIP-55) são a mesma conta no StateDB.
-- **Armazenamento:** SMT (Sparse Merkle Trie) com arquitetura Bonsai/SSZ.
+- **Armazenamento:** Arquitetura Bonsai/SSZ com suporte a Verkle Trees (default) e SMT (Sparse Merkle Trie) através da Trie Factory.
 
 ## 🛠️ Padrões de Desenvolvimento
 - **Compliance:** 100% Besu/Geth logic (Yellow Paper).
 - **Módulos Homologados:** `types`, `encoding`, `crypto`, `store`, `trie`, `wallet`. Alterações exigem auditoria.
 - **Testes:** Soberanos. Não alterar testes para corrigir bugs.
 
-- **Concluído:** Unified Identity, **Sovereign Transaction V1 (EIP-1559 Native)**, Mirroring nativo de saldo, Dívida Técnica Bloqueante (Gas Price, ReceiptsRoot, Buy Gas, VM Integration, JSON-RPC Read-only), Rede P2P (DTS Engine), MemPool (Gestão de transações pendentes com Purga Descendente), Sincronismo Determinístico (Besu-style), Conformidade Industrial IBFT2 (Pacing, Configurable Timeouts), Segurança Sync-to-Consensus (Observer Mode), Saneamento de Logs (Critical Level), Ghost Root Killer (Determinismo de Blocos Vazios), Resiliência de Sincronia (Channel Drainage), Compactação Soberana (Storage Optimization), Tsunami PQC Test (10.000 TXs Sustentadas), **Blindagem de Mercado (London/Besu Logic)**, **Otimização de Cache Industrial (MaxWarmTries Guard)**, **Sincronização Atômica Sync-Consensus (Anti-Self-Sabotage)** e **Chained State Oracle (Active Speculation).**
+- **Concluído:** Unified Identity, **Sovereign Transaction V1 (EIP-1559 Native)**, Mirroring nativo de saldo, Dívida Técnica Bloqueante (Gas Price, ReceiptsRoot, Buy Gas, VM Integration, JSON-RPC Read-only), Rede P2P (DTS Engine), MemPool (Gestão de transações pendentes com Purga Descendente), Sincronismo Determinístico (Besu-style), Conformidade Industrial IBFT2 (Pacing, Configurable Timeouts), Segurança Sync-to-Consensus (Observer Mode), Saneamento de Logs (Critical Level), Ghost Root Killer (Determinismo de Blocos Vazios), Resiliência de Sincronia (Channel Drainage), Compactação Soberana (Storage Optimization), Tsunami PQC Test (10.000 TXs Sustentadas), **Blindagem de Mercado (London/Besu Logic)**, **Otimização de Cache Industrial (MaxWarmTries Guard)**, **Sincronização Atômica Sync-Consensus (Anti-Self-Sabotage)**, **Chained State Oracle (Active Speculation)**, **Desacoplamento do SDK Java (Pure SDK)**, **Wallet Web App de Exemplo (Interativa)** e **Terminologia de Estado (Verkle/SMT).**
+
+## 🛠️ Decisões Recentes (12/06/2026)
+1. **Desacoplamento e Biblioteca Pura (SDK Java)**:
+    - **Ação:** Refatoração completa do módulo `sdk/java/jamii-sdk` para atuar como uma biblioteca Java pura e autônoma, livre de dependências do Spring Boot e de servidores web embutidos.
+    - **Implementação:** Substituição do `RestTemplate` por `java.net.http.HttpClient` nativo do Java 22. Adição do script `deploy_local.bat` para automatizar a compilação e publicação no diretório local `.m2/repository`.
+2. **Criação da Wallet Web de Exemplo (Java Web)**:
+    - **Ação:** Criação do módulo de exemplo em `sdk/examples/java` consumindo o SDK como dependência local externa do Maven.
+    - **Arquitetura & Segurança:** Criação do arquivo `application.properties` para configuração dinâmica de Keystores, eliminando caminhos hardcoded e cortando qualquer execução ou deploy automático no boot para evitar falhas silenciosas na ausência de nós locais da rede blockchain.
+    - **API e Assinatura Local:** Implementação do endpoint GET `/api/wallet` e do endpoint POST `/api/transfer` no `ApiController.java`. A assinatura da transação ocorre localmente usando a chave privada da carteira através do SDK, transmitindo o payload serializado em SSZ de forma segura via chamada RPC ao nó configurado.
+    - **Interface Premium:** Desenvolvimento de uma UI interativa em estilo *glassmorphism* (HTML/CSS/JS) rodando na porta `8080` com suporte a injeção e teste dinâmico de host/porta RPC persistido via `localStorage` do navegador, com feedback em tempo real para transações e testes de conexão.
+    - **Ferramental:** Criação do script `run.bat` para compilar e inicializar o servidor de exemplo.
+3. **Terminologia de Estado (Verkle Default)**:
+    - **Ação:** Substituição sistemática das referências exclusivas a "SMT" (Sparse Merkle Trie) nos manuais e documentação técnica pelo termo geral "Trie de Estado" ou "Trie", refletindo o suporte híbrido (Verkle/SMT) introduzido pela Trie Factory e confirmando o Verkle como padrão de árvore de estado na arquitetura Jamii.
+
+## 🛠️ Decisões Recentes (11/06/2026)
+1. **Transição de Assistência e CLI:**
+    - **Ação:** Oficializada a transição das ferramentas de assistência e suporte ao desenvolvimento da Jamii Blockchain, migrando do antigo `gemini-cli` para o novo assistente autônomo `antigravity-cli` (Antigravity).
+    - **Impacto:** Todas as diretivas de engenharia do [GEMINI.md](file:///C:/Magno/Projetos/jamii/GEMINI.md) e o histórico consolidado continuam 100% vigentes e sob custódia e aplicação rígida pelo novo assistente.
+
+2. **Humano-Compatibilidade de Logs (Friendly Peer Names & Clean Logs):**
+    - **Ação:** Implementação de resolução reversa de nomes lógicos no console de depuração e visualização do nó (ex: `NODE_A`, `NODE_B`) com base no `peers.json` do ambiente.
+    - **Resultado:** Os logs de canais de conexão do DTS, logs de status do nó, logs de verificação de assinaturas criptográficas PQC (ML-DSA) e logs do propositor designado/watchdog do consenso agora exibem o nome lógico do validador em vez do hash Bech32 bruto.
+    - **Higiene e Otimização de Logs:** Remoção do log redundante de chegada de sinal de consenso (`Consensus Signal`), rebaixamento do log de tráfego de dados expressos para o nível `TRACE` (limpando o console de depuração padrão) e elevação dos logs de quórum de `PREPARE` (Prepared state reached) e `COMMIT` (voted COMMIT. Quorum reached) para o nível `INFO` (dando visibilidade do consenso em produção).
+    - **Design Concorrente Seguro:** A resolução é estritamente de leitura (Read-Only) em tempo de execução (mapa populado síncrono no boot), eliminando overheads de sincronização e deadlocks.
+
+3. **Resiliência do Sync (Debounce de Catch-up):**
+    - **Ação:** Planejada a adição de uma tolerância temporal (debounce configurável de ~200ms) antes que o SyncManager inicie o processo de catch-up de blocos.
+    - **Objetivo:** Evitar que o SyncManager compita com o banco de dados PebbleDB e envie requisições DTS extras se o nó estiver apenas finalizando ativamente o bloco corrente via consenso.
 
 ## 🛠️ Decisões Recentes (10/06/2026)
 1. **Triunfo Arquitetural: Chained State Oracle (Especulação Ativa):**

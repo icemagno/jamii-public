@@ -130,8 +130,8 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
 
 ### 🦴 Ultra-Compactação de Skeleton Blocks (Bi-Polar Short IDs)
 Para minimizar a largura de banda durante o consenso sem perder a precisão:
-- [ ] **Bi-Polar Short IDs:** Em vez de transmitir hashes de 32 bytes das transações, o Proposer enviará um identificador de **6 bytes** composto pelos **3 primeiros e 3 últimos bytes** do hash original (ex: `[0:3] + [29:32]`).
-- [ ] **Mitigação de Colisão:** O espaçamento bi-polar aumenta a entropia em relação a um truncamento sequencial. Caso (raro) ocorra colisão na MemPool do nó receptor, o nó utilizará o `TxRoot` do cabeçalho como prova matemática para rejeitar a montagem incorreta e solicitar a transação específica via P2P.
+- [x] **Bi-Polar Short IDs:** Em vez de transmitir hashes de 32 bytes das transações, o Proposer enviará um identificador de **6 bytes** composto pelos **3 primeiros e 3 últimos bytes** do hash original (ex: `[0:3] + [29:32]`). [CONCLUÍDO - 03/06/2026]
+- [x] **Mitigação de Colisão:** O espaçamento bi-polar aumenta a entropia em relação a um truncamento sequencial. Caso (raro) ocorra colisão na MemPool do nó receptor, o nó utilizará o `TxRoot` do cabeçalho como prova matemática para rejeitar a montagem incorreta e solicitar a transação específica via P2P. [CONCLUÍDO - 03/06/2026]
 - [ ] **Impacto:** Redução de 48 KB para **~9 KB** por bloco (para 1.500 TXs), melhorando a resiliência em redes de alta latência e reduzindo picos de I/O na placa de rede.
 
 ### 🛡️ Peer Scoring & Network Protection (Sybil Mitigation)
@@ -141,9 +141,10 @@ Para minimizar a largura de banda durante o consenso sem perder a precisão:
 - [ ] **Impacto:** Proteção vital para a viabilidade de nós Stateless e para a saúde da MemPool global.
 
 ### ⏱️ Otimizações de Latência e Pipeline (High-Speed Throughput)
-- [ ] **Optimistic Block Pre-Assembly:** Pesquisar e implementar a capacidade de o próximo Proposer montar e pré-executar seu bloco em RAM enquanto o bloco atual finaliza seu commit IPA.
-- [ ] **Late-Stamping Header:** Mecanismo para injeção imediata de `ParentHash` e `StateRoot` em blocos pré-montados para reduzir o gap entre rodadas de consenso.
-- [ ] **Impacto:** Redução drástica do tempo de ociosidade da rede, permitindo que a produção de blocos ocorra quase em fluxo contínuo.
+- [x] **Optimistic Block Pre-Assembly:** Pesquisar e implementar a capacidade de o próximo Proposer montar e pré-executar seu bloco em RAM enquanto o bloco atual finaliza seu commit IPA (Chained State Oracle). [CONCLUÍDO - 10/06/2026]
+- [x] **Late-Stamping Header:** Mecanismo para injeção imediata de `ParentHash` e `StateRoot` em blocos pré-montados para reduzir o gap entre rodadas de consenso (Chained State Oracle). [CONCLUÍDO - 10/06/2026]
+- [ ] **Debounce de Sync (Catch-up Delay):** Adicionar uma tolerância temporal (ex: 200ms) antes do disparo de catch-up pelo SyncManager, evitando concorrência redundante com o processo de finalização e commit de blocos pelo consenso local.
+- [ ] **Impacto:** Redução de tráfego DTS espúrio e eliminação de conflitos de gravação no banco de dados entre threads de Sync e Consenso. Redução drástica do tempo de ociosidade da rede.
 
 ### 🏛️ Arquitetura de Plano Duplo (Dual-Plane Transport)
 Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transporte de dados:
@@ -154,6 +155,7 @@ Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transpor
 2.  **Plano de Dados (BitTorrent via `anacrolix/torrent`):** [CONCLUÍDO - 04/06/2026]
     *   **Foco:** Alto rendimento (Throughput).
     *   **Responsabilidade:** Download massivo de blocos históricos (State Sync), propagação de blocos cheios (Full Blocks) e distribuição de snapshots de estado.
+    *   **Identificação Soberana (Peer ID):** A identificação de peers na rede torrent deve utilizar obrigatoriamente o **Endereço Soberano (Bech32, ex: `jamii1...`)** em vez do Mirror Address (Hex). Isso garante a consistência da identidade através de todos os planos de rede (Controle e Dados).
     *   **Arquitetura Soberana (Trusted Peers):** Diferente de clientes BitTorrent convencionais, a Jamii injeta automaticamente a topologia de validadores como `Trusted Peers` em cada torrent. Isso elimina a dependência de DHTs públicos ou Trackers, garantindo conectividade P2P direta, imediata e segura entre os nós da rede.
     *   **Estratégia Zero-Copy (Virtual Storage):** O motor BitTorrent não duplica dados no disco. Ele acessa o banco de dados (StateDB) através de um wrapper de "Arquivo Virtual", serializando pedaços da chain sob demanda. Isso garante que o uso de disco não dobre, mantendo a eficiência industrial.
     *   **Isolamento de Consenso:** O tráfego pesado de dados flui em paralelo ao DTS, garantindo que o download de blocos passados não gere latência (jitter) nas mensagens de voto em tempo real.
