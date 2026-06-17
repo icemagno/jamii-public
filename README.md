@@ -9,16 +9,17 @@ Jamii é uma blockchain de alta performance projetada para a era pós-quântica.
 ⚠️ Licença: Este sistema está protegido sob a PolyForm Noncommercial License 1.0.0. O uso e a modificação são livres para fins não comerciais, desde que mantidos os créditos ao autor original. Uso comercial é estritamente proibido.
 
 
-## 🚀 Status do Projeto: Sprint 9.3 Concluída (Junho/2026)
+## 🚀 Status do Projeto: Sprint 9.4 Concluída (Junho/2026)
 
-O núcleo fundamental do Jamii atingiu maturidade industrial, quebrando recordes de throughput e estabilidade através de processamento paralelo e especulativo.
+O núcleo fundamental do Jamii atingiu maturidade industrial, quebrando recordes de throughput e estabilidade através de processamento paralelo e especulativo, com foco recente em resiliência de rede e otimização do consenso sob sincronismo.
 
+*   **`Consenso Resiliente (Watchdog de Liderança)`:** Redução do tempo de troca de propositor inativo de 10s para **2 segundos** se o propositor designado for detectado como "not ready" (syncing) ou desconectado.
+*   **`CPU-Safe Sync (Observer Mode)`:** Filtros estritos que evitam a exaustão de CPU e estouro de memória sob inundações de rede (floods), descartando transações e selos do consenso (`MT_VALIDATOR_SEAL`) enquanto o nó estiver em modo Observer.
+*   **`BitTorrent Sync Resiliente`:** Correção de concorrência e carregamento de metadados no boot, garantindo sincronização robusta e rápida do histórico em menos de 2 segundos para gaps grandes de blocos.
+*   **`Archiver Sync Atômico`:** Sincronismo contínuo e callbacks DTS integrados no nó de arquivo desacoplado.
 *   **`Chained State Oracle` (Recorde):** Novo recorde de **750 TX/s** sustentados (picos de **1.045 TX/s**) com blocos de 3.000 transações a cada 4 segundos.
-*   **`Consenso Turbo`:** Implementação de pipelining assíncrono que reduz o tempo de montagem de bloco pelo líder para **zero milissegundos**.
-*   **`Witness-Aided Quorum`:** Inovação que acelera o quórum em 70% através da verificação otimista via State Witness.
-*   **`DTS Ultra-Resilience`:** Estabilização da camada P2P com gestão inteligente de buffers, suportando blocos densos de 3.500+ TXs.
-*   **`pkg/core/types` (v1.2):** Suporte a **Bi-Polar Short IDs** para propagação de blocos ultra-compactos.
 *   **`pkg/trie` (v1.5):** Arquitetura *Bonsai Turbo* com **Verkle Tree Homomórfica (O(1))**.
+
 
 ## 🛠️ Diferenciais Tecnológicos (The Jamii Edge)
 
