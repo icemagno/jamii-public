@@ -3,10 +3,10 @@
     "chainId": "2026",
     "isFreeGas": false,
     "treeType": 1,
-    "blockPeriod": 3,
-    "requestTimeout": 8,
-    "maxTxsPerBlock": 2500,
-    "maxMempoolSlotSize": 10000,
+    "blockPeriod": 2,
+    "requestTimeout": 10,
+	"maxTxsPerBlock": 3000,
+    "maxMempoolSlotSize": 15000,
     "maxMempoolMemorySize": 536870912
   },
   "initialBaseFee": "1000000000",
@@ -133,8 +133,6 @@
     "jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74",
     "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05",
     "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5",
-    "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0",
-    "jamii1z9eyprqmvjmtettl2r54fvutqtygqyqkxc6hwx0",
-	"jamii1zfa7dw2qslpsl2m3jqzv505vv78kdgq0pgz4uep"
+    "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0"
   ]
 }

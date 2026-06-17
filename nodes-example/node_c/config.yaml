@@ -1,0 +1,19 @@
+data_dir: "./"
+node_key_file: "./nodekey"
+miner_enabled: true
+rpc_port: 8547
+p2p_port: 30305
+static_peers:
+  - "node_a:30303"
+  - "node_b:30304"
+  - "node_d:30306"
+  - "node_e:30307"
+  - "archiver:30310"  
+log_level: "info"
+genesis_file: "./genesis.json"
+torrent_port: 42002
+torrent_peers:
+  - "node_a:42000"
+  - "node_b:42001"
+  - "node_d:42003"
+  - "node_e:42004"
