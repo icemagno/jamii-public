@@ -15,6 +15,23 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
 
 - **Concluído:** Unified Identity, **Sovereign Transaction V1 (EIP-1559 Native)**, Mirroring nativo de saldo, Dívida Técnica Bloqueante (Gas Price, ReceiptsRoot, Buy Gas, VM Integration, JSON-RPC Read-only), Rede P2P (DTS Engine), MemPool (Gestão de transações pendentes com Purga Descendente), Sincronismo Determinístico (Besu-style), Conformidade Industrial IBFT2 (Pacing, Configurable Timeouts), Segurança Sync-to-Consensus (Observer Mode), Saneamento de Logs (Critical Level), Ghost Root Killer (Determinismo de Blocos Vazios), Resiliência de Sincronia (Channel Drainage), Compactação Soberana (Storage Optimization), Tsunami PQC Test (10.000 TXs Sustentadas), **Blindagem de Mercado (London/Besu Logic)**, **Otimização de Cache Industrial (MaxWarmTries Guard)**, **Sincronização Atômica Sync-Consensus (Anti-Self-Sabotage)**, **Chained State Oracle (Active Speculation)**, **Desacoplamento do SDK Java (Pure SDK)**, **Wallet Web App de Exemplo (Interativa)** e **Terminologia de Estado (Verkle/SMT).**
 
+## 🛠️ Decisões Recentes (17/06/2026)
+1. **Resiliência e Conexão Simétrica do Archiver (Nó Desacoplado):**
+    - **Ação:** Implementação de callbacks de conexão (`onConnect` e `onDisconnect`) no `dts.Engine` do Archiver e gatilho de `BroadcastStatus` inicial de presença.
+    - **Resultado:** O Archiver agora sincroniza dinamicamente e continuamente com os validadores no boot e nas reconexões, mantendo seu banco de dados PostgreSQL atualizado em tempo real.
+2. **Correção de Panics no BitTorrent Sync (Data Plane):**
+    - **Problema:** O método `DownloadChunk` invocava `t.DownloadAll()` antes de verificar `<-t.GotInfo()`, resultando em panic por desreferência de ponteiro nulo (`t.info == nil`) quando o InfoHash do torrent ainda não havia resolvido seus metadados no enxame.
+    - **Solução:** Adicionado bloqueio preventivo via select `<-t.GotInfo()` antes de chamar `t.DownloadAll()`, garantindo que os metadados do torrent estejam totalmente carregados.
+3. **Mapeamento Amigável nos Logs de Sincronismo (Friendly P2P Sync Logs):**
+    - **Ação:** Adicionado método público `PeerName(id)` ao `dts.Engine` e helper `peerName(id)` no `SyncManager` para exibir nomes lógicos (ex: `NODE_A`) nos logs de sync em vez de IDs Bech32 brutos.
+4. **Higiene de CPU e Mempool em Estado de Sync (Observer Mode Filtering):**
+    - **Ação:** Implementada filtragem estrita no `handleExpressArrival` para descartar mensagens de selos de validadores (`dts.MT_VALIDATOR_SEAL`) e no `handleDataArrival` para descartar transações da mempool (`dts.MT_TRANSACTION`) enquanto o nó estiver em modo de sincronismo inicial (`IsBehind() == true`).
+    - **Benefício:** Redução maciça no uso de CPU e proteção contra estouro/poluição de RAM na mempool sob inundações de rede (floods).
+5. **Watchdog de Proposer Não-Pronto (Early Leader Change):**
+    - **Ação:** Adicionada validação de prontidão (`IsProposerReady`) ao Watchdog de rodada (IBFT). Se o propositor selecionado for detectado como "not ready" (sincronizando) ou offline, o nó dispara imediatamente a troca de líder (`onTimeout("proposer offline/unready")`) após o grace period de 2 segundos, em vez de aguardar o timeout mestre de 10s.
+    - **Inicialização de Startup:** Inicialização explícita de todos os validadores da rede como `false` ('not ready') no mapa de controle `peerReady` no boot do nó.
+    - **Simplificação de Logs de Quórum:** Remoção de logs debug detalhados de votos de commit individuais (`voted COMMIT. Count: X/Y`) para evitar poluição visual e simplificação do log de quórum de commit para `[Round <H:R>] Quorum to COMMIT reached.` para melhor compatibilidade com grandes conjuntos de validadores (100+).
+
 ## 🛠️ Decisões Recentes (12/06/2026)
 1. **Desacoplamento e Biblioteca Pura (SDK Java)**:
     - **Ação:** Refatoração completa do módulo `sdk/java/jamii-sdk` para atuar como uma biblioteca Java pura e autônoma, livre de dependências do Spring Boot e de servidores web embutidos.

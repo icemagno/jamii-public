@@ -381,10 +381,12 @@ Diferente de protocolos que inundam a rede com pedidos, o Jamii utiliza o mapeam
 *   **Decisão:** O `SyncManager` foca o download sequencial especificamente contra este par, reduzindo a fragmentação e garantindo que os blocos sejam recebidos em ordem cronológica.
 
 #### Download Sequencial e Validado
-A sincronia ocorre através de requisições P2P (`RequestBlockByNumber`) via motor DTS.
+A sincronia ocorre através de requisições P2P (`RequestBlockByNumber`) via motor DTS ou em lote via BitTorrent.
 1.  **Request-Reply:** O nó solicita o bloco $H$, processa e só então solicita o bloco $H+1$.
 2.  **Validação de Consenso (Selo PQC):** Cada bloco recebido via sync passa obrigatoriamente pela `VerifyHeader` do motor de consenso. Se o selo quântico do validador não for autêntico, o sync é abortado para proteger o `StateDB` de corrupção por dados maliciosos.
 3.  **Drenagem de Canal:** Para evitar processar blocos obsoletos ou atrasados que chegam devido a latência de rede, o `SyncManager` realiza a drenagem completa do buffer de blocos antes de emitir uma nova solicitação.
+4.  **Higiene do Observer Mode (CPU/Mempool Protection):** Para economizar recursos de CPU e evitar saturação da mempool com transações antigas ou inválidas, novas transações (`MT_TRANSACTION`) e selos de consenso fofocados (`MT_VALIDATOR_SEAL`) são descartados silenciosamente pelo nó enquanto o `SyncManager` indicar que o nó está atrás da rede (`IsBehind() == true`).
+5.  **Mapeamento Amigável de Logs:** O `SyncManager` resolve a identidade Bech32 bruta para nomes amigáveis baseados na tabela populada no boot (ex: `NODE_A`), facilitando a leitura de rede.
 
 #### Prioridade e Handover
 *   **Consensus Priority:** As requisições de sincronia são tratadas em goroutines de transporte (DTS), garantindo que o nó "Server" nunca sacrifique a CPU do Consenso Live para servir dados históricos.
@@ -435,10 +437,12 @@ Esta inovação arquitetural resolve o dilema clássico "Segurança vs. Velocida
 *   **A Solução:** O Proposer anexa um **Block Witness** contendo os estados iniciais das contas. Validadores realizam uma **Verificação Otimista** em RAM para emitir seus votos de `PREPARE` e `COMMIT` instantaneamente.
 *   **Resultado:** Redução de 70% na latência de finalização. A prova IPA completa é verificada de forma assíncrona antes do commit final, garantindo integridade absoluta sem sacrificar o TPS.
 
-### 6.2. Estabilização DTS (DTS Ultra-Resilience)
-O motor P2P foi blindado contra saturação de buffer e picos de I/O de rede.
+### 6.2. Estabilização DTS e Consenso (DTS & Consensus Resilience)
+O motor P2P e o laço de consenso foram blindados contra saturação de buffer, picos de I/O e validadores lentos/syncing.
 *   **DTS WriteDeadline:** Aumentado para **10 segundos**. Esta mudança estratégica impede que o SO derrube conexões legítimas durante a reconstrução de blocos gigantes (3.500+ TXs).
 *   **Race Condition Mitigation:** Ajuste na ordem de precedência entre a montagem de blocos e o timer da rodada, eliminando o modo "Catch-up" desnecessário e garantindo que o dado chegue sempre antes do sinal de consenso.
+*   **Watchdog de Proposer Não-Pronto (Early Leader Change):** Caso o propositor designado de uma rodada de consenso seja detectado como "not ready" (sincronizando) ou offline (via conectividade P2P), o nó antecipa o voto de `RoundChange` após 2 segundos de carência (grace period), poupando até 8 segundos de ociosidade em relação ao timeout padrão de 10s.
+*   **Inicialização Segura e Poda de Logs:** O mapa de prontidão da rede (`peerReady`) é preenchido com `false` para todos os validadores no boot para assegurar que comecem como "not ready" até mandarem mensagem de status. Adicionalmente, logs individuais de votos debug de `COMMIT` foram removidos e o log de quórum de commit foi simplificado para `Quorum to COMMIT reached.` para evitar poluição visual em redes com muitos validadores.
 
 ---
 

@@ -209,6 +209,13 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 - [ ] **Binary Serialization:** Substituir o formato JSON por uma codificação binária estrita (PPQ/SSZ) para minimizar o peso do Skeleton Block.
 - [ ] **Suporte a Contratos Complexos:** Validar a aceleração de quórum em blocos que realizam múltiplas chamadas `SSTORE/SLOAD`.
 
+### 🛡️ Sprint 9.4: Resiliência de Sincronismo e Watchdog do Consenso (CONCLUÍDA)
+- [x] **Watchdog de Proposer Não-Pronto:** Redução da janela de timeout de 10s para 2s caso o proposer designado esteja offline ou não esteja pronto (`IsProposerReady() == false`).
+- [x] **Filtros Estritos do Observer Mode:** Descarte imediato de votos de consenso (`MT_VALIDATOR_SEAL`) e novas transações de mempool (`MT_TRANSACTION`) durante a sincronização para economizar CPU e evitar saturação da mempool.
+- [x] **Simetria de Rede do Archiver:** Implementação de callbacks de conexão e anúncio inicial de status no boot e reconexões do Archiver.
+- [x] **Correção de Metadados do Torrent:** Impedir falhas por ponteiro nulo aguardando a resolução de metadados (`<-t.GotInfo()`) no download de chunks.
+- [x] **Visualização de Rede Amigável:** Logs de sincronismo agora exibem nomes lógicos amigáveis (ex: `NODE_A`) em vez de IDs Bech32.
+
 ---
 
 ## 🛠️ Checklist de Transição para Produção (Tuning & Safety)
