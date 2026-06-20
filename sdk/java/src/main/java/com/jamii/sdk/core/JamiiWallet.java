@@ -21,6 +21,12 @@ import org.bouncycastle.crypto.params.MLDSAParameters;
 import org.bouncycastle.crypto.params.MLDSAPrivateKeyParameters;
 import org.bouncycastle.crypto.params.MLDSAPublicKeyParameters;
 import org.bouncycastle.crypto.params.MLDSAKeyGenerationParameters;
+import org.web3j.crypto.MnemonicUtils;
+import org.web3j.crypto.Bip32ECKeyPair;
+import org.bouncycastle.crypto.prng.FixedSecureRandom;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.digests.SHA512Digest;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,6 +41,7 @@ public class JamiiWallet {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final JamiiKeyPair keyPair;
     private final String password;
+    private String mnemonic;
 
     private static final X9ECParameters CURVE_PARAMS = CustomNamedCurves.getByName("secp256k1");
     private static final ECDomainParameters CURVE = new ECDomainParameters(
@@ -77,16 +84,31 @@ public class JamiiWallet {
         this.keyPair = new JamiiKeyPair(privTradRaw, privQuantRaw, pubTrad, pubQuant);
     }
 
-    // Construtor para criar nova carteira
-    public JamiiWallet(String password) {
+    // Construtor para criar nova carteira derivando de mnemônico gerado
+    public JamiiWallet(String password) throws Exception {
         this.password = password;
-        SecureRandom random = new SecureRandom();
-
-        // 1. Gerar Secp256k1 (Traditional)
-        ECKeyPairGenerator ecGen = new ECKeyPairGenerator();
-        ecGen.init(new ECKeyGenerationParameters(CURVE, random));
-        AsymmetricCipherKeyPair ecKp = ecGen.generateKeyPair();
-        byte[] privTrad = ((ECPrivateKeyParameters) ecKp.getPrivate()).getD().toByteArray();
+        
+        // 1. Gerar entropia para 12 palavras (128 bits / 16 bytes)
+        byte[] entropy = new byte[16];
+        new SecureRandom().nextBytes(entropy);
+        
+        // 2. Mapear para mnemônico
+        this.mnemonic = MnemonicUtils.generateMnemonic(entropy);
+        
+        // 3. Derivar chaves híbridas a partir do mnemônico
+        byte[] seed = MnemonicUtils.generateSeed(this.mnemonic, "");
+        
+        // 4. Derivar tradicional (Secp256k1) via BIP-32 m/44'/60'/0'/0/0
+        Bip32ECKeyPair master = Bip32ECKeyPair.generateKeyPair(seed);
+        int[] path = {
+            44 | Bip32ECKeyPair.HARDENED_BIT,
+            60 | Bip32ECKeyPair.HARDENED_BIT,
+            0 | Bip32ECKeyPair.HARDENED_BIT,
+            0,
+            0
+        };
+        Bip32ECKeyPair child = Bip32ECKeyPair.deriveKeyPair(master, path);
+        byte[] privTrad = child.getPrivateKey().toByteArray();
         if (privTrad.length > 32) {
             byte[] tmp = new byte[32];
             System.arraycopy(privTrad, privTrad.length - 32, tmp, 0, 32);
@@ -96,16 +118,84 @@ public class JamiiWallet {
             System.arraycopy(privTrad, 0, tmp, 32 - privTrad.length, privTrad.length);
             privTrad = tmp;
         }
-        byte[] pubTrad = ((ECPublicKeyParameters) ecKp.getPublic()).getQ().getEncoded(true);
-
-        // 2. Gerar ML-DSA-65 (Quantum)
+        
+        // 5. Derivar tradicional public key
+        ECPrivateKeyParameters ecPriv = new ECPrivateKeyParameters(new BigInteger(1, privTrad), CURVE);
+        ECPublicKeyParameters ecPub = new ECPublicKeyParameters(CURVE.getG().multiply(ecPriv.getD()), CURVE);
+        byte[] pubTrad = ecPub.getQ().getEncoded(true);
+        
+        // 6. Derivar quântica (ML-DSA-65) a partir do quantSeed via HMAC-SHA512
+        HMac hmac = new HMac(new SHA512Digest());
+        hmac.init(new KeyParameter("Jamii ML-DSA Seed".getBytes(StandardCharsets.UTF_8)));
+        hmac.update(seed, 0, seed.length);
+        byte[] hmacOut = new byte[64];
+        hmac.doFinal(hmacOut, 0);
+        byte[] quantSeed = new byte[32];
+        System.arraycopy(hmacOut, 0, quantSeed, 0, 32);
+        
+        FixedSecureRandom fixedRandom = new FixedSecureRandom(quantSeed);
         MLDSAKeyPairGenerator mlGen = new MLDSAKeyPairGenerator();
-        mlGen.init(new MLDSAKeyGenerationParameters(random, MLDSAParameters.ml_dsa_65));
+        mlGen.init(new MLDSAKeyGenerationParameters(fixedRandom, MLDSAParameters.ml_dsa_65));
         AsymmetricCipherKeyPair mlKp = mlGen.generateKeyPair();
         byte[] privQuant = ((MLDSAPrivateKeyParameters) mlKp.getPrivate()).getEncoded();
         byte[] pubQuant = ((MLDSAPublicKeyParameters) mlKp.getPublic()).getEncoded();
-
+        
         this.keyPair = new JamiiKeyPair(privTrad, privQuant, pubTrad, pubQuant);
+    }
+
+    // Construtor para importar carteira a partir de mnemônico
+    public JamiiWallet(String mnemonic, String password) throws Exception {
+        this.password = password;
+        this.mnemonic = mnemonic;
+        
+        byte[] seed = MnemonicUtils.generateSeed(mnemonic, "");
+        
+        // Derivar tradicional (Secp256k1) via BIP-32 m/44'/60'/0'/0/0
+        Bip32ECKeyPair master = Bip32ECKeyPair.generateKeyPair(seed);
+        int[] path = {
+            44 | Bip32ECKeyPair.HARDENED_BIT,
+            60 | Bip32ECKeyPair.HARDENED_BIT,
+            0 | Bip32ECKeyPair.HARDENED_BIT,
+            0,
+            0
+        };
+        Bip32ECKeyPair child = Bip32ECKeyPair.deriveKeyPair(master, path);
+        byte[] privTrad = child.getPrivateKey().toByteArray();
+        if (privTrad.length > 32) {
+            byte[] tmp = new byte[32];
+            System.arraycopy(privTrad, privTrad.length - 32, tmp, 0, 32);
+            privTrad = tmp;
+        } else if (privTrad.length < 32) {
+            byte[] tmp = new byte[32];
+            System.arraycopy(privTrad, 0, tmp, 32 - privTrad.length, privTrad.length);
+            privTrad = tmp;
+        }
+        
+        ECPrivateKeyParameters ecPriv = new ECPrivateKeyParameters(new BigInteger(1, privTrad), CURVE);
+        ECPublicKeyParameters ecPub = new ECPublicKeyParameters(CURVE.getG().multiply(ecPriv.getD()), CURVE);
+        byte[] pubTrad = ecPub.getQ().getEncoded(true);
+        
+        // Derivar quântica (ML-DSA-65) a partir do quantSeed via HMAC-SHA512
+        HMac hmac = new HMac(new SHA512Digest());
+        hmac.init(new KeyParameter("Jamii ML-DSA Seed".getBytes(StandardCharsets.UTF_8)));
+        hmac.update(seed, 0, seed.length);
+        byte[] hmacOut = new byte[64];
+        hmac.doFinal(hmacOut, 0);
+        byte[] quantSeed = new byte[32];
+        System.arraycopy(hmacOut, 0, quantSeed, 0, 32);
+        
+        FixedSecureRandom fixedRandom = new FixedSecureRandom(quantSeed);
+        MLDSAKeyPairGenerator mlGen = new MLDSAKeyPairGenerator();
+        mlGen.init(new MLDSAKeyGenerationParameters(fixedRandom, MLDSAParameters.ml_dsa_65));
+        AsymmetricCipherKeyPair mlKp = mlGen.generateKeyPair();
+        byte[] privQuant = ((MLDSAPrivateKeyParameters) mlKp.getPrivate()).getEncoded();
+        byte[] pubQuant = ((MLDSAPublicKeyParameters) mlKp.getPublic()).getEncoded();
+        
+        this.keyPair = new JamiiKeyPair(privTrad, privQuant, pubTrad, pubQuant);
+    }
+
+    public String getMnemonic() {
+        return mnemonic;
     }
 
     public JamiiKeyPair getKeyPair() {
