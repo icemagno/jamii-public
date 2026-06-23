@@ -128,6 +128,14 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
 ## ⚡ Fase 8: Sincronismo Híbrido e Throughput (PLANEJADA)
 *Objetivo:* Escalar a rede para volumes massivos de dados sem comprometer a latência do consenso.
 
+### 🆕 Sprint 8.1: Chaves Públicas de Validadores no Genesis (Resolução de Boot Offline)
+- [ ] **Genesis PQC Keys**: Alterar a struct `Genesis` em `pkg/node/config.go` e a especificação do `genesis.json` para permitir a inclusão opcional das chaves públicas completas (ML-DSA) dos validadores do bloco inicial.
+- [ ] **Bootstrap Key Seeding**: Atualizar o orquestrador do nó para pré-carregar e registrar essas chaves em memória no `IdentityRegistry` durante a inicialização (boot), permitindo a validação síncrona de blocos históricos sem dependência de handshakes DTS dinâmicos prévios.
+
+### 🆕 Sprint 8.2: Política de Seeding Torrent Restrita (Archiver-Only Seeding)
+- [ ] **Restricted Seed Mode**: Adicionar suporte a um modo puramente consumidor no `pkg/torrent/engine.go` (definindo `cfg.Seed = false` e silenciando loops de seeding se o nó for um validador/nó comum).
+- [ ] **Validator Offloading**: Configurar nós validadores e comuns para atuarem apenas como baixadores no BitTorrent Swarm, limitando a atividade de *seeding* (geração de arquivos virtuais/reais e upload) estritamente aos nós de arquivo (*Archiver*), conservando CPU e largura de banda de I/O de disco nos nós de consenso.
+
 ### 🦴 Ultra-Compactação de Skeleton Blocks (Bi-Polar Short IDs)
 Para minimizar a largura de banda durante o consenso sem perder a precisão:
 - [x] **Bi-Polar Short IDs:** Em vez de transmitir hashes de 32 bytes das transações, o Proposer enviará um identificador de **6 bytes** composto pelos **3 primeiros e 3 últimos bytes** do hash original (ex: `[0:3] + [29:32]`). [CONCLUÍDO - 03/06/2026]
@@ -215,6 +223,31 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 - [x] **Simetria de Rede do Archiver:** Implementação de callbacks de conexão e anúncio inicial de status no boot e reconexões do Archiver.
 - [x] **Correção de Metadados do Torrent:** Impedir falhas por ponteiro nulo aguardando a resolução de metadados (`<-t.GotInfo()`) no download de chunks.
 - [x] **Visualização de Rede Amigável:** Logs de sincronismo agora exibem nomes lógicos amigáveis (ex: `NODE_A`) em vez de IDs Bech32.
+
+---
+
+## 🛡️ Fase 10: Mitigação de Riscos de Consenso e Otimização de Estado (Futuras Sprints)
+*Objetivo:* Endereçar as limitações e vulnerabilidades de segurança expostas pela análise crítica do modelo de especulação, do overhead de PQC e do gargalo de execução linear da EVM.
+
+### 🆕 Sprint 10.1: Resiliência de Especulação em Round Changes (Anti-Nonce Drift)
+- [ ] **Descarte Imediato de Estado Especulativo:** Implementar escuta reativa para eventos de `RoundChange` no `controller.go` para cancelar e limpar o cache de `speculativeBlock` no exato milissegundo de uma mudança de rodada.
+- [ ] **Prevenção de Proposta Inválida:** Garantir que o Proposer nunca envie uma proposta baseada em estado especulativo defasado por mudança de round, forçando regeneração imediata em cima do estado estável do round atual.
+- *Razão:* Evita propostas inválidas em cascata causadas por nonces/saldos inconsistentes quando a rede perde sincronia temporária.
+
+### 🆕 Sprint 10.2: Mitigação de Storage Bloat e Sincronismo Stateless PQC
+- [ ] **Soberania Stateless (Pruning de Assinaturas):** Pesquisar e implementar descarte de assinaturas PQC pesadas (~3.3KB por TX) de blocos antigos em nós validadores comuns após a finalização e checkpoint do estado.
+- [ ] **Isolamento de Histórico:** Manter a guarda do histórico completo de assinaturas brutas exclusivamente nos nós Archiver (armazenadores de torrent), reduzindo o custo de I/O e espaço de disco de nós normais.
+- *Razão:* Evita o crescimento insustentável do banco de dados (storage bloat) devido ao tamanho das assinaturas pós-quânticas.
+
+### 🆕 Sprint 10.3: Blindagem Matemática de Witness (Anti-State Drift)
+- [ ] **Equivalência Estrita de Sandbox:** Garantir que a validação otimista baseada em Proposer Witness na RAM execute sob regras matemáticas 100% idênticas ao motor de persistência em disco.
+- [ ] **Tratamento de Divergência Falsa:** Substituir a pânico imediata do nó por uma rejeição graciosa e isolamento do proposer se a consolidação física divergir do resultado da Witness otimista.
+- *Razão:* Protege a rede contra ataques DoS onde proposers maliciosos enviam witnesses falsas que passam na RAM mas travam/brickam todos os validadores honestos no commit de disco.
+
+### 🆕 Sprint 10.4: Execução Paralela Concorrente na EVM (Multi-threaded VM)
+- [ ] **Módulo de Paralelismo de Transações (Block-STM):** Desenvolver um classificador que identifique transações não conflitantes no bloco (que tocam em contas e armazenamento distintos).
+- [ ] **Execução Concorrente na VM:** Executar transações sem conflitos em threads paralelas de EVM, removendo o gargalo de thread única antes de enviar o batch para a Trie (SMT/Verkle).
+- *Razão:* Garante que o paralelismo de computação da Trie da Jamii traga ganho real de TPS mesmo para blocos com transações complexas de smart contracts.
 
 ---
 

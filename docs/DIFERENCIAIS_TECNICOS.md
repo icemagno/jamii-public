@@ -33,7 +33,7 @@ Métricas obtidas em testes de estresse reais (Sovereign Pipelining Test - Junho
 ## ⚙️ 4. Estabilidade e Higiene de Consenso
 Arquitetura focada em resiliência e determinismo absoluto.
 
-*   **Chained State Oracle (Active Speculation):** Implementação pioneira de pipelining assíncrono para consensos BFT. O próximo líder antecipa o processamento do bloco futuro durante a janela de espera (Pacing) da rede. Isso transfere o custo da EVM para o tempo ocioso, permitindo propostas instantâneas.
+*   **Chained State Oracle (Active Speculation):** Implementação pioneira de pipelining assíncrono para consensos BFT. O próximo líder antecipa o processamento do bloco futuro durante a janela de espera (Pacing) da rede. Isso transfere o custo da EVM para o tempo ocioso, permitindo propostas instantâneas. (Veja a justificativa arquitetural detalhada em [MEMORIA_DECISAO_ESPECULACAO.md](file:///C:/Magno/Projetos/jamii/docs/MEMORIA_DECISAO_ESPECULACAO.md)).
 *   **Espera Inteligente (Smart Wait):** Sistema de sincronização que evita a re-execução de blocos se a especulação já estiver em curso, otimizando o uso de hardware multi-core.
 *   **Witness-Aided Quorum Acceleration (Sprint 9.2):** Aceleração de consenso via "Block Witness". Diferente do Ethereum, o Proposer envia os estados iniciais das contas, permitindo que os validadores realizem uma verificação otimista em RAM (pulando a matemática IPA pesada durante o round). Isso permitiu a finalização de 3.000+ TXs em milissegundos.
 *   **Ghost Root Killer:** Garantia de StateRoot determinístico em blocos vazios, herdando a raiz do pai e evitando divergências por poluição de cache.

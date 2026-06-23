@@ -20,9 +20,11 @@ O núcleo fundamental do Jamii atingiu maturidade industrial, quebrando recordes
 *   **`Chained State Oracle` (Recorde):** Novo recorde de **750 TX/s** sustentados (picos de **1.045 TX/s**) com blocos de 3.000 transações a cada 4 segundos.
 *   **`pkg/trie` (v1.5):** Arquitetura *Bonsai Turbo* com **Verkle Tree Homomórfica (O(1))**.
 
-
 ## 🛠️ Diferenciais Tecnológicos (The Jamii Edge)
 
+*   **Identidade Unificada Shadowless (Zero Migration UX):** O ecossistema Jamii elimina o maior atrito da transição pós-quântica. Um único payload de chaves tradicionais (Secp256k1) e quânticas (ML-DSA-65) mapeia para a mesma conta no World State, servindo de forma unificada tanto a endereços clássicos Ethereum (`0x...`) quanto soberanos (`jamii1...`), sem necessidade de migrações de saldos.
+*   **Bonsai Turbo (O(1) I/O nativo em Go):** Esqueça a descida de árvore tradicional de outros clientes ($O(\log N)$ acessos a disco). A Jamii implementa o Bonsai Turbo em PebbleDB, garantindo que o acesso a saldos e contas ocorra em tempo constante $O(1)$, com escrita de árvore em segundo plano.
+*   **Trie Criptográfica Paralela (Multi-core SMT & Verkle):** Seja usando SMT ou a inovadora Verkle Tree (IPA/Bandersnatch), a Jamii paraleliza a computação de hashes de subárvores e compromissos polinomiais complexos usando goroutines e semáforos, aproveitando 100% dos núcleos de CPU.
 *   **Chained State Oracle (Active Speculation):** O Jamii utiliza um oráculo de estado encadeado que "lê o futuro". Enquanto a rede aguarda o tempo de cadência (Pacing) entre os blocos, o próximo propositor já monta e executa o bloco seguinte em uma thread paralela isolada (Sandbox). Quando a rodada começa, o bloco já está pronto para broadcast instantâneo, eliminando a latência de execução do caminho crítico do consenso.
 *   **Witness-Aided Quorum Acceleration:** Diferente de outras blockchains, a Jamii separa a prova de estado do quórum de votação. Validadores usam o "Witness" para aprovar o bloco instantaneamente em RAM, enquanto a prova IPA pesada é processada em paralelo, eliminando o gargalo de latência do IBFT tradicional.
 *   **Ultra-Compact Skeleton (Bi-Polar):** Redução de **81%** no tráfego de rede. Blocos com 3.000 TXs trafegam quase sem overhead, usando identificadores de 6 bytes (3 iniciais + 3 finais), permitindo que o dado chegue antes do sinal de consenso.
@@ -35,7 +37,7 @@ Abaixo estão os resultados reais obtidos em testes de flood massivo (3.000 Tx/b
 | Métrica de Eficiência | Resultado Alcançado | Destaque Técnico |
 | :--- | :--- | :--- |
 | **Throughput (TPS)** | **~750.0 TX/s** | **Recorde Mundial PQC:** Desempenho industrial sustentado sob carga. |
-| **Pico de Vazão** | **1.045 TX/s** | Explosão de processamento (Fidelity Match). |
+| **Pico de Vazão** | **1.045 TX/s** | Explosão de processamento no bloco #12 (Fidelity Match). |
 | **Banda de Rede** | **~15 KB / 3k TXs** | **Bi-Polar Short IDs:** Ultra-compactação de esqueletos de bloco. |
 | **Tempo de Liderança** | **< 1ms** | Montagem de bloco em tempo zero via promoção de especulação. |
 | **Verkle Trees** | **O(1) Efficiency** | **Cálculo Incremental:** Compromissos IPA calculados sem re-hashing total. |
@@ -53,7 +55,7 @@ O Jamii é regido por uma arquitetura rigorosa e documentada. Consulte os pilare
 *   ⚡ **[Otimizações Jamii Turbo](docs/jamii_turbo_optimization.md):** Detalhes sobre a arquitetura Zero-Alloc/Zero-Copy.
 
 ### Resultados da Auditoria (Abril/2026):
-*   ✅ **Consenso SMT:** Estado convergente garantido via indexação por prefixo de bits.
+*   ✅ **Consenso de Estado (Verkle/SMT):** Estado convergente garantido via Trie Factory e indexação determinística.
 *   ✅ **Criptografia L3:** Sincronização total com ML-DSA-65 (Nível 3).
 *   ✅ **Imutabilidade de Memória:** Prevenção de Data Races no cálculo de hashes de transação.
 *   ✅ **Resiliência DoS:** Operações aritméticas seguras com tratamento de erros.
