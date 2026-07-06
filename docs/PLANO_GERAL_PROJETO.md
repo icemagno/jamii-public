@@ -106,13 +106,13 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
 
 ---
 
-## 🍃 Fase 7: Soberania Stateless (Nós Sem Disco) (PLANEJADA)
+## 🍃 Fase 7: Soberania Stateless (Nós Sem Disco) (CONCLUÍDA - 06/07/2026)
 *Objetivo:* Permitir que dispositivos de baixa capacidade (Android, IoT) participem da validação sem armazenar a cadeia completa.
 
 ### 🧬 Verkle Witnesses & Stateless Execution
-- [ ] **Protocolo de Testemunha (Execution Witness):** Implementar a geração de provas Verkle compactas durante a proposta de bloco.
-- [ ] **Mensagem DTS Híbrida:** Criar o tipo `MSG_BLOCK_WITH_WITNESS` para propagação de blocos auto-contidos criptograficamente.
-- [ ] **Validação Stateless:** Habilitar o `StateProcessor` a validar blocos usando apenas a `StateRoot` e a Witness, sem consultar o `StateDB` local.
+- [x] **Protocolo de Testemunha (Execution Witness):** Implementar a geração de provas Verkle compactas durante a proposta de bloco. [CONCLUÍDO - 06/07/2026]
+- [x] **Mensagem DTS Híbrida:** Criar o tipo `MSG_BLOCK_WITH_WITNESS` para propagação de blocos auto-contidos criptograficamente. [CONCLUÍDO - 06/07/2026]
+- [x] **Validação Stateless:** Habilitar o `StateProcessor` a validar blocos usando apenas a `StateRoot` e a Witness, sem consultar o `StateDB` local. [CONCLUÍDO - 06/07/2026]
 
 ### 🛡️ Guardian Nodes (Nós Guardiões)
 - [ ] **Perfil de Hardware Android:** Otimizar o consumo de recursos para permitir que o nó rode em background em smartphones.
@@ -201,21 +201,21 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 
 ---
 
-## ⚡ Fase 9: Aceleração de Quórum por Witness (PRÓXIMA SPRINT)
+## ⚡ Fase 9: Aceleração de Quórum por Witness (CONCLUÍDA - 06/07/2026)
 *Objetivo:* Eliminar o gargalo de CPU/IPA na rede através da verificação assimétrica.
 
 ### 🚀 Sprint 9.1: Otimização do StateProcessor
-- [ ] **Modo de Validação Stateless:** Adaptar o `pkg/core/processor.go` para aceitar uma `Witness` opcional durante a execução de blocos recebidos via P2P.
-- [ ] **RAM-First Execution:** Se uma Witness estiver presente, o processador deve priorizar os dados da testemunha em vez de consultar o PebbleDB local, economizando ciclos de I/O.
+- [x] **Modo de Validação Stateless:** Adaptar o `pkg/core/processor.go` para aceitar uma `Witness` opcional durante a execução de blocos recebidos via P2P. [CONCLUÍDO - 06/07/2026]
+- [x] **RAM-First Execution:** Se uma Witness estiver presente, o processador deve priorizar os dados da testemunha em vez de consultar o PebbleDB local, economizando ciclos de I/O. [CONCLUÍDO - 06/07/2026]
 
 ### 🛡️ Sprint 9.2: Protocolo "Bala na Agulha" (Safety)
-- [ ] **Deferred Commit:** Refatorar o `consensus/ibft/controller.go` para segurar o `Commit()` de disco até a finalização do quórum total de mensagens `COMMIT`.
-- [ ] **Witness Injection:** Alterar o Proposer para gerar e anexar a prova Verkle/IPA (Witness) no momento do `PRE-PREPARE`.
+- [x] **Deferred Commit:** Refatorar o `consensus/ibft/controller.go` para segurar o `Commit()` de disco até a finalização do quórum total de mensagens `COMMIT`. [CONCLUÍDO - 06/07/2026]
+- [x] **Witness Injection:** Alterar o Proposer para gerar e anexar a prova Verkle/IPA (Witness) no momento do `PRE-PREPARE`. [CONCLUÍDO - 06/07/2026]
 
 ### 🧪 Sprint 9.3: Witness para Storage e Otimização Binária
-- [ ] **Storage Slot Tracking:** Atualizar o `StateDB` para incluir slots de storage na Witness gerada pelo Proposer.
-- [ ] **Binary Serialization:** Substituir o formato JSON por uma codificação binária estrita (PPQ/SSZ) para minimizar o peso do Skeleton Block.
-- [ ] **Suporte a Contratos Complexos:** Validar a aceleração de quórum em blocos que realizam múltiplas chamadas `SSTORE/SLOAD`.
+- [x] **Storage Slot Tracking:** Atualizar o `StateDB` para incluir slots de storage na Witness gerada pelo Proposer. [CONCLUÍDO - 06/07/2026]
+- [x] **Binary Serialization:** Substituir o formato JSON por uma codificação binária estrita (PPQ/SSZ) para minimizar o peso do Skeleton Block. [CONCLUÍDO - 06/07/2026]
+- [x] **Suporte a Contratos Complexos:** Validar a aceleração de quórum em blocos que realizam múltiplas chamadas `SSTORE/SLOAD`. [CONCLUÍDO - 06/07/2026]
 
 ### 🛡️ Sprint 9.4: Resiliência de Sincronismo e Watchdog do Consenso (CONCLUÍDA)
 - [x] **Watchdog de Proposer Não-Pronto:** Redução da janela de timeout de 10s para 2s caso o proposer designado esteja offline ou não esteja pronto (`IsProposerReady() == false`).

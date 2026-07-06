@@ -5,16 +5,16 @@ rpc_port: 8546
 p2p_port: 30304
 torrent_port: 42091
 static_peers:
-  - "n1:30303"
-  - "n3:30305"
-  - "n4:30306"
-  - "n5:30307"
-  - "archiver:30310"  
+  - "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v:30303"
+  - "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05:30305"
+  - "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5:30306"
+  - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:30307"
+  - "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a:30310"  
 log_level: "debug"
 genesis_file: "./genesis.json"
 torrent_peers:
-  - "n1:42090"
-  - "n3:42092"
-  - "n4:42093"
-  - "n5:42094"
-  - "archiver:42020"  
+  - "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v:42090"
+  - "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05:42092"
+  - "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5:42093"
+  - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:42094"
+  - "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a:42020"  
