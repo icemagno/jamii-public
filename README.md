@@ -66,16 +66,6 @@ O Jamii é regido por uma arquitetura rigorosa e documentada. Consulte os pilare
 
 ## 🛠️ Começando
 
-### Requisitos
-*   Go 1.22+
-*   GCC (para Keccak otimizado, se necessário)
-
-### Rodando os Testes
-Para garantir a integridade da sua instalação, execute a suíte de testes completa:
-```bash
-go test -v ./pkg/...
-```
-
 ### Configuração Inicial (Setup)
 Antes de iniciar um nó pela primeira vez, você pode gerar sua identidade soberana (chave privada e manifesto de endereços) usando o comando de setup:
 
