@@ -71,10 +71,10 @@ Antes de iniciar um nó pela primeira vez, você pode gerar sua identidade sober
 
 ```bash
 # Gera a identidade no diretório padrão (./data)
-go run cmd/jamii/main.go setup generate-key
+jamii.exe setup generate-key
 
 # Ou especificando um diretório customizado
-go run cmd/jamii/main.go setup generate-key --datadir ./meu_node_data
+jamii.exe setup generate-key --datadir ./meu_node_data
 ```
 
 Este comando criará o arquivo `nodekey` (chave privada híbrida PQC) e o `node_address.json` contendo seu **Sovereign Address**, necessário para inclusão no arquivo `genesis.json` caso você deseje ser um validador.
