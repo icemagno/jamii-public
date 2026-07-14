@@ -17,7 +17,7 @@ O núcleo fundamental do Jamii atingiu maturidade industrial, quebrando recordes
 *   **`CPU-Safe Sync (Observer Mode)`:** Filtros estritos que evitam a exaustão de CPU e estouro de memória sob inundações de rede (floods), descartando transações e selos do consenso (`MT_VALIDATOR_SEAL`) enquanto o nó estiver em modo Observer.
 *   **`BitTorrent Sync Resiliente`:** Correção de concorrência e carregamento de metadados no boot, garantindo sincronização robusta e rápida do histórico em menos de 2 segundos para gaps grandes de blocos.
 *   **`Archiver Sync Atômico`:** Sincronismo contínuo e callbacks DTS integrados no nó de arquivo desacoplado.
-*   **`Chained State Oracle` (Recorde):** Novo recorde de **750 TX/s** sustentados (picos de **1.045 TX/s**) com blocos de 3.000 transações a cada 4 segundos.
+*   **`Chained State Oracle` (Consistência):** Montagem síncrona pós-pacing com vazão de **94.8 TPS** sustentada sob flood em ambiente multi-servidor.
 *   **`pkg/trie` (v1.5):** Arquitetura *Bonsai Turbo* com **Verkle Tree Homomórfica (O(1))**.
 
 ## 🛠️ Diferenciais Tecnológicos (The Jamii Edge)
@@ -25,23 +25,27 @@ O núcleo fundamental do Jamii atingiu maturidade industrial, quebrando recordes
 *   **Identidade Unificada Shadowless (Zero Migration UX):** O ecossistema Jamii elimina o maior atrito da transição pós-quântica. Um único payload de chaves tradicionais (Secp256k1) e quânticas (ML-DSA-65) mapeia para a mesma conta no World State, servindo de forma unificada tanto a endereços clássicos Ethereum (`0x...`) quanto soberanos (`jamii1...`), sem necessidade de migrações de saldos.
 *   **Bonsai Turbo (O(1) I/O nativo em Go):** Esqueça a descida de árvore tradicional de outros clientes ($O(\log N)$ acessos a disco). A Jamii implementa o Bonsai Turbo em PebbleDB, garantindo que o acesso a saldos e contas ocorra em tempo constante $O(1)$, com escrita de árvore em segundo plano.
 *   **Trie Criptográfica Paralela (Multi-core SMT & Verkle):** Seja usando SMT ou a inovadora Verkle Tree (IPA/Bandersnatch), a Jamii paraleliza a computação de hashes de subárvores e compromissos polinomiais complexos usando goroutines e semáforos, aproveitando 100% dos núcleos de CPU.
-*   **Chained State Oracle (Active Speculation):** O Jamii utiliza um oráculo de estado encadeado que "lê o futuro". Enquanto a rede aguarda o tempo de cadência (Pacing) entre os blocos, o próximo propositor já monta e executa o bloco seguinte em uma thread paralela isolada (Sandbox). Quando a rodada começa, o bloco já está pronto para broadcast instantâneo, eliminando a latência de execução do caminho crítico do consenso.
+*   **Chained State Oracle (Synchronous Pacing):** O Jamii utiliza a cadência física de blocos (Block Period) para garantir a consistência do estado pai. A montagem do bloco ocorre de forma estritamente síncrona e segura no início do turno de liderança (pós-pacing), sobre uma base do PebbleDB totalmente consolidada e livre de escritas concorrentes, unindo robustez a tempos de execução de milissegundos.
 *   **Witness-Aided Quorum Acceleration:** Diferente de outras blockchains, a Jamii separa a prova de estado do quórum de votação. Validadores usam o "Witness" para aprovar o bloco instantaneamente em RAM, enquanto a prova IPA pesada é processada em paralelo, eliminando o gargalo de latência do IBFT tradicional.
 *   **Ultra-Compact Skeleton (Bi-Polar):** Redução de **81%** no tráfego de rede. Blocos com 3.000 TXs trafegam quase sem overhead, usando identificadores de 6 bytes (3 iniciais + 3 finais), permitindo que o dado chegue antes do sinal de consenso.
 *   **DTS (Distributed Transaction Store):** Motor P2P de canal duplo (Express/Bulk). Sinais de consenso viajam por "vias rápidas" sem serem bloqueados por downloads de blocos pesados.
 
-## ⚡ Desempenho Soberano (Certificação Industrial 2026)
+## ⚡ Desempenho em Rede Distribuída (Julho/2026)
 
-Abaixo estão os resultados reais obtidos em testes de flood massivo (3.000 Tx/bloco):
+Abaixo estão os resultados reais medidos sob flood massivo simultâneo (90.000 transações divididas em 3 fluxos de 30.000 TXs) em rede física distribuída em 3 servidores de produção (5 validadores + Archiver):
 
-| Métrica de Eficiência | Resultado Alcançado | Destaque Técnico |
+| Métrica de Eficiência | Vazão em Produção | Destaque Técnico |
 | :--- | :--- | :--- |
-| **Throughput (TPS)** | **~750.0 TX/s** | **Recorde Mundial PQC:** Desempenho industrial sustentado sob carga. |
-| **Pico de Vazão** | **1.045 TX/s** | Explosão de processamento no bloco #12 (Fidelity Match). |
-| **Banda de Rede** | **~15 KB / 3k TXs** | **Bi-Polar Short IDs:** Ultra-compactação de esqueletos de bloco. |
-| **Tempo de Liderança** | **< 1ms** | Montagem de bloco em tempo zero via promoção de especulação. |
-| **Verkle Trees** | **O(1) Efficiency** | **Cálculo Incremental:** Compromissos IPA calculados sem re-hashing total. |
-| **Criptografia PQC** | **~100k op/s** | Verificação dual (Tradicional + Quântica) com latência sub-milissegundo. |
+| **Throughput Médio** | **~94.8 TPS** | Vazão real sustentada sob flood de transações Dilithium (PQC Nível 3). |
+| **Pico de Vazão** | **107.0 TPS** | Máxima velocidade de escoamento e comits registrada sob flood contínuo. |
+| **Tempo de Bloco** | **3.0s a 3.1s** | **Block Pacing:** Cadência perfeitamente homogênea com `blockperiod = 3s` configurado. |
+| **Tempo de Consenso** | **< 100ms** | A votação física (Propose/Prepare/Commit) no DTS leva apenas ~100ms, restando ~2.9s de ociosidade/pacing. |
+| **Gravação PebbleDB** | **O(1) Efficiency** | **Bonsai Turbo:** Persistência determinística em tempo de milissegundos. |
+| **Reconstrução Bi-Polar** | **~95% Economia** | Reconstrução de blocos cheios localmente a partir de Short IDs (compact block skeleton). |
+
+### Avaliação do Comportamento da Rede:
+* **Ampla Folga Operacional:** A rede opera com extrema estabilidade. De um tempo de bloco de 3.0s, cerca de 2.9s representam tempo de pacing ocioso (o nó aguarda a expiração do timestamp mínimo do bloco anterior). O processamento de Consensus, EVM e I/O físico em disco (PebbleDB) consome apenas cerca de 100ms, demonstrando que a rede está longe do limite de saturação física.
+* **Auto-Recuperação e Resiliência (Watchdog Keep-Alive):** O Watchdog de quórum do nó transmite ativamente atualizações de status a cada 5 segundos. Em caso de oscilações de rede ou atraso de sincronização, as tabelas locais dos validadores se autoregulam em tempo real, destravando o consenso de forma imediata e transparente.
 
 
 ## 🛡️ Documentação e Auditoria
@@ -87,9 +91,16 @@ Este comando criará o arquivo `nodekey` (chave privada híbrida PQC) e o `node_
 
 ### Iniciando o Nó
 ```bash
-# Inicia o nó usando a configuração padrão
-go run cmd/jamii/main.go start
 
-# Ou especificando um arquivo de configuração YAML
-go run cmd/jamii/main.go start --config config.yaml
+docker run \
+  --name jamii-node \
+  -v ./config.yaml:/config.yaml:ro \
+  -v ./genesis.json:/genesis.json:ro \
+  -v ./peers.json:/peers.json:ro \
+  -v ./datadir:/datadir \
+  -p 8545:8545 \
+  -p 30303:30303 \
+  -p 42000:42000 \
+  -d magnoabreu/jamii-node:0.1.0-alpha 
+
 ```
