@@ -33,7 +33,7 @@ Isso executará o comando `mvn clean install`, que gerará o arquivo JAR e o dis
 
 ## 📦 Como Usar em Outros Projetos
 
-Uma vez instalado localmente, adicione a seguinte dependência ao arquivo `pom.xml` do seu projeto Java:
+Adicione a seguinte dependência ao arquivo `pom.xml` do seu projeto Java:
 
 ```xml
 <dependency>

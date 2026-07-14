@@ -100,6 +100,9 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
 - [x] **Identity Bridge (Sovereign Precompiled):** Implementação do contrato pré-compilado em Go no endereço `0xFF...FF` para conversão Bech32. [CONCLUÍDO - 05/06/2026]
 - [x] **Sovereign Bridge (Reverse Conversion):** Implementação da decodificação Bech32 no endereço `0xFF...FE` para retorno ao Mirror (0x). [CONCLUÍDO - 05/06/2026]
 - [x] **VM Gas Fix:** Correção da contabilidade de gás para chamadas nativas (Refund System). [CONCLUÍDO - 05/06/2026]
+- [x] **Block Explorer (JamiiScan) & Wallet UI:** Interface Light Premium integrada à carteira de testes, com suporte a Login (Keystore/Mnemônico BIP-39) e confirmação de transferência com modal customizado. [CONCLUÍDO - 18/06/2026]
+- [x] **Smart Contracts Gate:** Roteador e implantador dinâmico de contratos Solidity via API REST e frontend do explorer, com inputs gerados a partir do parse da ABI. [CONCLUÍDO - 26/06/2026]
+- [x] **Otimizações do Banco de Dados Postgres (WAL/Unnest):** Indexação secundária e persistência de endereços em lote via unnest para remover gargalos de escrita e contenção de WAL. [CONCLUÍDO - 18/06/2026]
 - [ ] **Jamii Dev Kit (Solidity):** Criar biblioteca de ferramentas oficiais (`Identity.sol`) para abstrair chamadas de baixo nível (`staticcalls`) aos pré-compilados da Jamii, garantindo segurança e tipagem forte para desenvolvedores de dApps.
 - [ ] **Compiler Integration:** Integrar o Jamii Dev Kit ao compilador soberano para resolução automática de imports de sistema.
 - [ ] **Jamii Go SDK:** Unificar as ferramentas de carteira e cliente RPC em um pacote SDK Go reutilizável.
@@ -149,9 +152,10 @@ Para minimizar a largura de banda durante o consenso sem perder a precisão:
 - [ ] **Impacto:** Proteção vital para a viabilidade de nós Stateless e para a saúde da MemPool global.
 
 ### ⏱️ Otimizações de Latência e Pipeline (High-Speed Throughput)
-- [x] **Optimistic Block Pre-Assembly:** Pesquisar e implementar a capacidade de o próximo Proposer montar e pré-executar seu bloco em RAM enquanto o bloco atual finaliza seu commit IPA (Chained State Oracle). [CONCLUÍDO - 10/06/2026]
-- [x] **Late-Stamping Header:** Mecanismo para injeção imediata de `ParentHash` e `StateRoot` em blocos pré-montados para reduzir o gap entre rodadas de consenso (Chained State Oracle). [CONCLUÍDO - 10/06/2026]
+- [ ] **Optimistic Block Pre-Assembly (Chained State Oracle):** Pesquisar e implementar a capacidade de o próximo Proposer montar e pré-executar seu bloco em RAM. [DESATIVADO - 10/07/2026] (Desativado permanentemente para evitar condições de corrida de I/O no PebbleDB e concorrência na RAM)
+- [ ] **Late-Stamping Header:** Mecanismo para injeção imediata de `ParentHash` e `StateRoot` em blocos pré-montados para reduzir o gap entre rodadas de consenso. [DESATIVADO - 10/07/2026] (Desligado junto com a especulação ativa)
 - [ ] **Debounce de Sync (Catch-up Delay):** Adicionar uma tolerância temporal (ex: 200ms) antes do disparo de catch-up pelo SyncManager, evitando concorrência redundante com o processo de finalização e commit de blocos pelo consenso local.
+- [x] **Mempool BaseFee Startup Sync:** Sincronizar o BaseFee inicial da MemPool com o valor do último bloco persistido no PebbleDB ao bootar o nó. [CONCLUÍDO - 10/07/2026]
 - [ ] **Impacto:** Redução de tráfego DTS espúrio e eliminação de conflitos de gravação no banco de dados entre threads de Sync e Consenso. Redução drástica do tempo de ociosidade da rede.
 
 ### 🏛️ Arquitetura de Plano Duplo (Dual-Plane Transport)
@@ -207,6 +211,7 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 ### 🚀 Sprint 9.1: Otimização do StateProcessor
 - [x] **Modo de Validação Stateless:** Adaptar o `pkg/core/processor.go` para aceitar uma `Witness` opcional durante a execução de blocos recebidos via P2P. [CONCLUÍDO - 06/07/2026]
 - [x] **RAM-First Execution:** Se uma Witness estiver presente, o processador deve priorizar os dados da testemunha em vez de consultar o PebbleDB local, economizando ciclos de I/O. [CONCLUÍDO - 06/07/2026]
+- [x] **Pre-State Witness (Nonce Drift Fix):** Extração de nonces e saldos de partida a partir do bloco pai para a Witness stateless, corrigindo rejeições incorretas de transações por descompasso de nonces. [CONCLUÍDO - 10/07/2026]
 
 ### 🛡️ Sprint 9.2: Protocolo "Bala na Agulha" (Safety)
 - [x] **Deferred Commit:** Refatorar o `consensus/ibft/controller.go` para segurar o `Commit()` de disco até a finalização do quórum total de mensagens `COMMIT`. [CONCLUÍDO - 06/07/2026]
@@ -223,6 +228,8 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 - [x] **Simetria de Rede do Archiver:** Implementação de callbacks de conexão e anúncio inicial de status no boot e reconexões do Archiver.
 - [x] **Correção de Metadados do Torrent:** Impedir falhas por ponteiro nulo aguardando a resolução de metadados (`<-t.GotInfo()`) no download de chunks.
 - [x] **Visualização de Rede Amigável:** Logs de sincronismo agora exibem nomes lógicos amigáveis (ex: `NODE_A`) em vez de IDs Bech32.
+- [x] **Keep-Alive Ativo de Status (P2P Status Keep-Alive Ticker):** Envio de status periódico (`BroadcastStatus` a cada 5s) a partir do Watchdog para atualizar as tabelas de quórum e destravar automaticamente nós em Halt. [CONCLUÍDO - 13/07/2026]
+- [x] **Silenciamento de Emissão para Observadores (P2P Broadcast Suppression):** Bloqueio de envio de mensagens de consenso por nós observadores para evitar poluição visual e pacotes espúrios. [CONCLUÍDO - 10/07/2026]
 
 ---
 
@@ -230,7 +237,8 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 *Objetivo:* Endereçar as limitações e vulnerabilidades de segurança expostas pela análise crítica do modelo de especulação, do overhead de PQC e do gargalo de execução linear da EVM.
 
 ### 🆕 Sprint 10.1: Resiliência de Especulação em Round Changes (Anti-Nonce Drift)
-- [ ] **Descarte Imediato de Estado Especulativo:** Implementar escuta reativa para eventos de `RoundChange` no `controller.go` para cancelar e limpar o cache de `speculativeBlock` no exato milissegundo de uma mudança de rodada.
+- [x] **Desativação Permanente da Especulação Paralela:** Remoção do gatilho assíncrono (Chained State Oracle) devido a condições de corrida no disco/RAM. O Proposer agora monta novos blocos síncrona e deterministicamente. [CONCLUÍDO - 10/07/2026]
+- [x] **Estabilização de Heap na MemPool:** Promoção offline de transações e inicialização linear dos heaps no reset pós-bloco para erradicar crashes de `index out of range`. [CONCLUÍDO - 10/07/2026]
 - [ ] **Prevenção de Proposta Inválida:** Garantir que o Proposer nunca envie uma proposta baseada em estado especulativo defasado por mudança de round, forçando regeneração imediata em cima do estado estável do round atual.
 - *Razão:* Evita propostas inválidas em cascata causadas por nonces/saldos inconsistentes quando a rede perde sincronia temporária.
 
@@ -248,6 +256,11 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 - [ ] **Módulo de Paralelismo de Transações (Block-STM):** Desenvolver um classificador que identifique transações não conflitantes no bloco (que tocam em contas e armazenamento distintos).
 - [ ] **Execução Concorrente na VM:** Executar transações sem conflitos em threads paralelas de EVM, removendo o gargalo de thread única antes de enviar o batch para a Trie (SMT/Verkle).
 - *Razão:* Garante que o paralelismo de computação da Trie da Jamii traga ganho real de TPS mesmo para blocos com transações complexas de smart contracts.
+
+### 🆕 Sprint 10.5: Descentralização e Governança de Validadores (On-Chain Multisig/Voting)
+- [x] **Módulo de Votação On-Chain:** Desenvolver e testar um contrato inteligente de votação onde os validadores ativos possam propor e votar na entrada de novos validadores ou na remoção de membros existentes.
+- [x] **Transferência de Propriedade (Ownership Transfer):** Migrar a propriedade (`owner`) do `ValidatorRegistry` do endereço do Nó 01 para o endereço do contrato de votação ou carteira Multisig do consórcio de operadores.
+- *Razão:* Elimina o ponto único de falha e de controle concentrado na chave privada do Nó 01, garantindo uma governança de consenso verdadeiramente distribuída.
 
 ---
 
@@ -284,9 +297,9 @@ Esta seção detalha os ajustes obrigatórios ao sair do ambiente de testes (2 n
 Estas tarefas são consideradas bloqueantes para o lançamento da Mainnet. Sem elas, a rede opera apenas em modo de "Federação Fechada".
 
 1.  **On-Chain Validator Registry (Sovereign Governance):**
-    *   **Status:** Pendente.
-    *   **Definição:** Mover as chaves públicas PQC de validadores do arquivo local (`identities.json`) para a **Verkle Tree**.
-    *   **Impacto:** Permite a governança descentralizada (votação para novos validadores) e rotatividade de chaves sem necessidade de Hard Forks.
+    *   **Status:** [x] Concluído.
+    *   **Definição:** Mover as chaves públicas PQC de validadores para a **Verkle Tree** via contrato inteligente de registro on-chain pré-alocado na gênese.
+    *   **Impacto:** Permite a governança descentralizada (votação para novos validadores) e rotatividade de chaves sem necessidade de Hard Forks, integrando chamadas EVM dinâmicas no consenso.
 
 2.  **Torrent Snap Sync (High-Speed Onboarding):**
     *   **Status:** Motor validado, Integração pendente.

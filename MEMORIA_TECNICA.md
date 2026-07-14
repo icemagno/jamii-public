@@ -409,6 +409,15 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
     - **Ação:** O campo `GasPrice` (Effective) foi removido do layout binário assinado.
     - **Motivo:** Permitir assinaturas imutáveis. O preço pago é uma consequência do estado da rede, não uma previsão do usuário. O usuário assina apenas seus limites (`MaxFee` e `PriorityFee`).
 
+## 🛠️ Decisões Recentes (14/07/2026)
+1. **Autogovernança Dinâmica e Descentralizada de Validadores (Voting Mechanism):**
+    - **Ação:** Migração do contrato `ValidatorRegistry` para um modelo auto-gerido sem a figura de administrador estático (`owner`).
+    - **Mecânica:** Apenas os membros ativos no comitê de validadores (endereços de consenso dos nós) podem criar propostas (`propose`) e registrar votos (`vote`). A inclusão ou exclusão de validadores é executada automaticamente na EVM ao atingir o quórum de maioria simples ($> N/2$).
+    - **Integração com o Consenso:** O motor IBFT 2.0 (`controller.go`) consulta localmente a lista de validadores do contrato na EVM na virada de cada nova altura de bloco, atualizando dinamicamente o conjunto de assinantes autorizados.
+2. **Custeio de Gas com Lucro de Consenso (Economic Security Rule):**
+    - **Regra:** As transações de governança (votos e propostas) no contrato `ValidatorRegistry` devem ser pagas utilizando os próprios lucros/recompensas de bloco acumulados por cada validador.
+    - **Motivo:** Vincula o peso político do validador à sua alta disponibilidade e boa conduta na rede. Nós instáveis ou inativos que fiquem fora do ar não geram recompensas e, consequentemente, perdem a capacidade financeira de propor ou votar em mudanças por escassez de saldo para gas. Além disso, previne spam de transações e propostas lixo no StateDB.
+
 ## 🛠️ Decisões Recentes (09/05/2026)
 1. **Cadência de Produção (Block Pacing):**
     - Implementada a lógica de espera obrigatória no Proposer baseada no `blockPeriod` do Gênesis.
