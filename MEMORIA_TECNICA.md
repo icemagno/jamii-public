@@ -417,6 +417,18 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
 2. **Custeio de Gas com Lucro de Consenso (Economic Security Rule):**
     - **Regra:** As transações de governança (votos e propostas) no contrato `ValidatorRegistry` devem ser pagas utilizando os próprios lucros/recompensas de bloco acumulados por cada validador.
     - **Motivo:** Vincula o peso político do validador à sua alta disponibilidade e boa conduta na rede. Nós instáveis ou inativos que fiquem fora do ar não geram recompensas e, consequentemente, perdem a capacidade financeira de propor ou votar em mudanças por escassez de saldo para gas. Além disso, previne spam de transações e propostas lixo no StateDB.
+3. **Staking, Slashing e Tesouraria Configurável (Consensus Guarantees):**
+    - **Ação:** Introdução de depósito de garantia obrigatório (Staking) e regras de confisco (Slashing) no contrato `ValidatorRegistry`.
+    - **Depósito de Entrada:** Qualquer candidato que deseje ingressar no comitê de validadores via proposta (`propose`) deve realizar um depósito sob fiança de `100.000 tokens` nativos usando o método `deposit()`. Os fundos ficam sob custódia do contrato inteligente.
+    - **Punição por Má Conduta (Slashing):** Se um validador ativo for removido da rede por meio de votação de consenso, a garantia financeira dele é confiscada do contrato e transferida imediatamente para a conta de **Tesouraria** configurada.
+    - **Tesouraria Configurável via Gênese:** O endereço da tesouraria é definido pela chave `"treasury"` no arquivo `genesis.json` e pré-alocado no **Slot 4** de armazenamento permanente do contrato inteligente no bloco gênese #0.
+    - **Saque (Withdrawal):** Saídas voluntárias ou candidatos que não se elegeram podem resgatar seus fundos por meio do método `withdraw()`.
+4. **Mapeamento de Endereços de Contrato Recém-Criados no Explorer (Smart Contract Address Resolution):**
+    - **Problema:** O card "Contratos Inteligentes Recentes" do explorador exibia o endereço dos contratos criados pós-Gênese como `NULL`. Isso acontecia porque a tabela `account_flat` era populada apenas com o `address_hash` (chave do StateDB) durante os commits do Trie, enquanto a correspondência textual (Bech32 e Mirror) permanecia nula.
+    - **Solução:** Atualização de [postgres.go](file:///c:/Magno/Projetos/jamii/pkg/store/postgres/postgres.go) para inspecionar os recibos de transações (`r:`). Se o recibo contiver o endereço de um contrato criado (`ContractAddress != nil`), a função `RegisterAddress` é invocada no banco relacional para registrar o mapeamento de hash para endereço textual.
+    - **Resolução de Contratos do Sistema:** Adicionado o registro do endereço do contrato de validadores (`ValidatorContract`) do Gênese no startup do arquivador em [main.go](file:///c:/Magno/Projetos/jamii/cmd/archiver/main.go), assegurando que o contrato de governança também seja exibido corretamente com seu endereço textual.
+
+
 
 ## 🛠️ Decisões Recentes (09/05/2026)
 1. **Cadência de Produção (Block Pacing):**
