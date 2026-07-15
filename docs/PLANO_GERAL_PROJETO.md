@@ -262,6 +262,17 @@ Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degrad
 - [x] **Transferência de Propriedade (Ownership Transfer):** Migrar a propriedade (`owner`) do `ValidatorRegistry` do endereço do Nó 01 para o endereço do contrato de votação ou carteira Multisig do consórcio de operadores.
 - *Razão:* Elimina o ponto único de falha e de controle concentrado na chave privada do Nó 01, garantindo uma governança de consenso verdadeiramente distribuída.
 
+### 🆕 Sprint 10.6: Distribuição de Taxas e Recompensa de Validadores (Proposer Fee Reward & Block Reward)
+- [ ] **Redirecionamento de Taxas (Tip Redirect):** Atualizar o `StateProcessor` para creditar a taxa de prioridade (gorjeta da transação) diretamente na conta do propositor do bloco (`coinbase`), permitindo que validadores acumulem fundos para governança de forma sustentável.
+- [ ] **Recompensa de Bloco Configurável (Block Reward Minting):** Adicionar suporte a um valor de recompensa estática de bloco configurável via `genesis.json`. O nó criará e creditará esses novos tokens ao propositor em cada altura de bloco.
+- *Razão:* Garante a sustentabilidade financeira dos validadores e viabiliza a regra de custeio de governança on-chain de forma descentralizada.
+
+### 🆕 Sprint 10.7: Detecção de Fraude e Punição de Validadores (Slashing & Jailing)
+- [ ] **Detector de Assinatura Dupla (Double-Signing Detector):** Implementar monitoramento ativo no consenso para interceptar se um mesmo validador assinou propostas ou commits conflitantes na mesma altura de bloco e rodada.
+- [ ] **Expulsão e Slashing de Tokens:** Criar o fluxo automatizado onde nós honestos que detectem provas de comportamento bizantino enviem transações de governança para ejetar o validador infrator. Opcionalmente, punir financeiramente queimando ou confiscando parte de seus tokens garantidores.
+- [ ] **Suspensão Temporária (Jailing):** Implementar lógica para desativar temporariamente o direito de voto e de participação em rounds para nós inativos (offline por mais de $X$ blocos consecutivos), forçando a recuperação técnica antes do retorno.
+- *Razão:* Protege a rede contra ataques de negação de serviço, conluios maliciosos de validadores que tentem causar forks na cadeia, e degradação do consenso por inatividade.
+
 ---
 
 ## 🛠️ Checklist de Transição para Produção (Tuning & Safety)
