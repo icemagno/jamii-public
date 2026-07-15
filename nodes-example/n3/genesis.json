@@ -3,18 +3,19 @@
     "chainId": "2026",
     "isFreeGas": false,
     "treeType": 2,
-    "blockPeriod": 3,
-    "requestTimeout": 8,
-    "maxTxsPerBlock": 2500,
-    "maxMempoolSlotSize": 10000,
-    "maxMempoolMemorySize": 536870912
+    "blockPeriod": 7,
+    "requestTimeout": 20,
+    "maxTxsPerBlock": 1000,
+    "maxMempoolSlotSize": 15000,
+    "maxMempoolMemorySize": 536870912,
+    "validatorContract": "0x00000000000000000000000000000000fffffffd"
   },
   "initialBaseFee": "1000000000",
   "timestamp": 1746758400,
   "gasLimit": 30000000,
   "alloc": {
-    "0xD4A9fF65b636433A12AA91f9adC6Eeb3D8b6BE30": {
-      "balance": "500000000000000000000000000",
+    "jamii1z6ppc63fese7v8dv0pnngyjlwtpu8cu9auqtt95": {
+      "balance": "865836200000000000000000000",
       "nonce": 0,
       "code": null,
       "storage": null

@@ -409,6 +409,27 @@ Este arquivo serve como o "cérebro" de longo prazo para o desenvolvimento, perm
     - **Ação:** O campo `GasPrice` (Effective) foi removido do layout binário assinado.
     - **Motivo:** Permitir assinaturas imutáveis. O preço pago é uma consequência do estado da rede, não uma previsão do usuário. O usuário assina apenas seus limites (`MaxFee` e `PriorityFee`).
 
+## 🛠️ Decisões Recentes (15/07/2026)
+1. **Otimização do Watchdog de Proposer (Dynamic Watchdog Timer):**
+    - **Ação:** Refatoração do Watchdog do Proposer no módulo `Round` ([round.go](file:///c:/Magno/Projetos/jamii/pkg/consensus/ibft/round.go)). Substituição da rotina `go func() { time.Sleep(2 * time.Second) ... }` por um timer cancelável nativo (`time.Timer` via `time.AfterFunc`).
+    - **Grace Period Dinâmico:** O tempo de espera do Watchdog foi alterado de 2 segundos fixos para ser proporcional ao período do bloco (`50% de BlockPeriod`, com limite mínimo de 2 segundos). Isso previne timeouts e mudanças de líderes prematuras sob estresse pesado da rede.
+    - **Prevenção de Vazamento de Recursos:** O timer do Watchdog é agora explicitamente parado (`Stop()`) nos métodos `Stop()` e `onTimeout()`, eliminando o risco de goroutines órfãs na RAM e contenção de trancas de CPU em rodadas encerradas.
+2. **Gerador de Carga Concorrente e Estável (Jamii Traffic Generator):**
+    - **Ação:** Criação da ferramenta standalone [generator.go](file:///c:/Magno/Projetos/jamii/cmd/traffic/generator.go) para testes de estresse concorrentes sustentados (Soak Test).
+    - **Criptografia Rápida e Faucet:** Gera identidades híbridas (Secp256k1 + ML-DSA-65) de forma extremamente rápida ignorando o fluxo pesado de KDF (scrypt) e mnemônicos. Financia as contas sequencialmente no arranque. Um faucet em background monitora e recarrega os saldos on-chain via chamadas RPC quando caem abaixo de 1 JAMII.
+    - **Concorrência Livre de Deadlocks:** Resolvidos problemas de AB-BA Deadlock isolando o lock das goroutines durante as chamadas de rede HTTP e utilizando balanceamento dinâmico via pool de conexões HTTP Keep-Alive.
+3. **Mitigação de DoS e Resiliência BFT sob Estresse de Rede (DTS & MemPool Security):**
+    - **Ação:** Correção de vulnerabilidade de descarte silencioso de mensagens de sincronização em `pkg/dts/engine.go` e proteção de spam em `pkg/mempool/pool.go`.
+    - **DTS Timeout-based Send:** Substituição do enfileiramento não-bloqueante imediato (`select { case: default: }`) por um select com timeout de 3 segundos (`time.After(3 * time.Second)`) para requisições de bloco (`MsgGetBlockByNumber`) e respostas de blocos completos (`MsgData`). Isso garante que dados de reconstrução de blocos não sejam descartados durante congestionamento de rede por gossips de transações, ao mesmo tempo em que previne vazamentos de goroutines em nós desconectados.
+    - **Controle de Spam por Remetente na MemPool:** Implementação de um limite de transações pendentes/agendadas na pool por conta de `MaxSlotSize / 5` (2.000 por conta). Evita ataques de exaustão de slots da pool por um único remetente floodando transações inválidas ou de baixo custo, isolando o impacto apenas à conta agressora.
+4. **Dimensionamento de requestTimeout sob Carga (BFT Liveness Calibration):**
+    - **Regra:** O `requestTimeout` deve ser calibrado com base no `blockPeriod` e na capacidade de processamento de hardware da rede. Sob estresse denso (ex: 100+ TPS com assinaturas híbridas ML-DSA e Verkle Trees), o `requestTimeout` deve garantir uma folga de processamento de pelo menos 5 a 6 segundos além do `blockPeriod` (ex: `blockPeriod = 6s` e `requestTimeout = 12s` ou `15s`).
+    - **Motivo:** Evita timeouts prematuros e mudanças de líderes espúrias na Rodada 0. Garante que os líderes de R:0 tenham tempo físico suficiente para computar e propagar blocos sob estresse de CPU antes que os nós secundários forcem transições de rodadas.
+5. **Mecanismo de Dupla Camada para Proteção de Vivacidade (BFT Liveness Guard Rails):**
+    - **Ação:** Validação da arquitetura de detecção de falhas de validadores.
+    - **Watchdog DTS (Falhas Físicas):** O Proposer Watchdog dinâmico (executado a 50% do `blockPeriod`) valida se o nó líder está ativo e conectado via DTS P2P. Em caso de crash físico (queda de processo ou servidor), a troca de líder é acionada instantaneamente em apenas 3 segundos, sem esperar pelo timeout principal.
+    - **RequestTimeout (Falhas Lógicas):** O cronômetro de `requestTimeout` age como uma segunda linha de defesa contra falhas lógicas (deadlocks de banco de dados, loops infinitos na EVM ou silenciamentos de rede). Mesmo se o DTS indicar que o nó está online, o timeout impede o congelamento infinito da rede, forçando a vivacidade (Liveness) e a continuidade do consenso.
+
 ## 🛠️ Decisões Recentes (14/07/2026)
 1. **Autogovernança Dinâmica e Descentralizada de Validadores (Voting Mechanism):**
     - **Ação:** Migração do contrato `ValidatorRegistry` para um modelo auto-gerido sem a figura de administrador estático (`owner`).

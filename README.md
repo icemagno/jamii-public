@@ -81,7 +81,6 @@ Este comando criará o arquivo `nodekey` (chave privada híbrida PQC) e o `node_
 
 ### Iniciando o Nó
 ```bash
-
 docker run \
   --name jamii-node \
   -v ./config.yaml:/config.yaml:ro \
@@ -92,5 +91,18 @@ docker run \
   -p 30303:30303 \
   -p 42000:42000 \
   -d magnoabreu/jamii-node:0.1.0-alpha 
-
 ```
+
+### Iniciando o Archiver
+```bash
+docker run \
+  --name jamii-archiver \
+  -v ./config.yaml:/config.yaml:ro \
+  -v ./genesis.json:/genesis.json:ro \
+  -v ./peers.json:/peers.json:ro \
+  -v ./datadir:/datadir \
+  -p 8556:8556 \
+  -p 30310:30310 \
+  -p 42020:42020 \
+  -d magnoabreu/jamii-archiver:0.1.0-alpha 
+```  
