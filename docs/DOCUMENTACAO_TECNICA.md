@@ -268,6 +268,11 @@ A assinatura é realizada sobre o `BindingHash`, tornando as duas identidades in
 *   **Anti-Otimização:** Uso de `runtime.KeepAlive` para garantir que o compilador não ignore o wiping.
 *   **Performance:** Verificação híbrida estabilizada em **102.904 TPS**.
 
+**Não-Repúdio e Zero-Trust no Consenso (SignedData & Seals)**
+A Jamii adota o princípio de descentralização "Zero-Trust", onde nenhum nó confia nas informações repassadas por outros sem validação criptográfica matemática independente.
+*   **Mensagens de Consenso Autenticadas (`SignedData`):** Todas as mensagens de protocolo (Propose, Prepare, Commit e RoundChange) são encapsuladas e assinadas pelo emissor original com sua chave pós-quântica híbrida (ML-DSA-65). Ao receber e propagar essas mensagens (gossip), qualquer nó receptor pode chamar `msg.Verify()` e validar de forma independente a autoria original contra o cartório local de chaves (`signer.GetRegistry()`), sem precisar confiar no nó intermediário que retransmitiu a mensagem.
+*   **Assinaturas de Bloco (`Validator Seals`):** Para garantir o não-repúdio do histórico, cada bloco commitado carrega selos físicos (`seals`) contendo as assinaturas digitais pós-quânticas dos validadores que aprovaram o bloco. Qualquer nó que sincronize a rede de forma offline (via BitTorrent) ou stateless (via testemunhas de execução) valida a integridade do estado e autoria do bloco chamando `pub.Verify(blockHash, seal)` de maneira totalmente autônoma.
+
 ### 5.3. Codificação e Serialização (`pkg/encoding`)
 O Jamii utiliza **SSZ (Simple Serialize)** como padrão nativo, unificado sob o modelo **Sovereign V1 (EIP-1559 Native)**.
 
@@ -396,6 +401,12 @@ A sincronia ocorre através de requisições P2P (`RequestBlockByNumber`) via mo
 Para cenários de sincronismo massivo (milhões de blocos), o Jamii evoluirá para a **Fase 4: BitTorrent Sync**.
 *   **Otimização:** O nó dividirá a cadeia em "chunks" de blocos, solicitando diferentes fatias de múltiplos pares simultaneamente.
 *   **Performance:** Esta abordagem transformará o sincronismo em uma operação de **Alto Rendimento**, eliminando o I/O de disco como gargalo único de um só par.
+
+#### Decisão Arquitetural: Rejeição do Protocolo RLPx (Ethereum)
+Durante o design do plano de comunicação, a adoção do RLPx (protocolo p2p legado do Ethereum) foi avaliada e **explicitamente rejeitada** devido aos seguintes fatores:
+1. **Incompatibilidade Criptográfica (ECDH clássico):** O handshake do RLPx é baseado em ECDH com a curva `secp256k1` clássica. Usá-lo introduziria uma vulnerabilidade pós-quântica imediata na camada de transporte (permitindo interceptação *harvest-now-decrypt-later*). A Jamii adota uma estratégia soberana com **identidades híbridas (ML-DSA-65)** e planeja um acordo efêmero pós-quântico **(ML-KEM-512)** no handshake nativo.
+2. **Conflito de Codificação (RLP vs. SSZ):** O RLPx depende da serialização RLP. A Jamii adotou o padrão moderno e rigidamente tipado **SSZ (Simple Serialize)** na especificação *Sovereign V1* para todos os seus payloads pós-quânticos, tornando o RLP redundante e ineficiente.
+3. **Saturação de Canal Único:** O RLPx multiplexa frames em uma única conexão TCP física. Como as transações quânticas da Jamii possuem payloads extensos, a multiplexação do RLPx geraria gargalos severos de latência (jitter) nos votos de consenso do IBFT2 sob estresse. A Jamii mitiga isso via arquitetura de **Plano Duplo** do DTS, que separa fisicamente o Plano de Controle (Express/Baixa Latência) do Plano de Dados (Bulk/BitTorrent).
 
 ### 5.7. O Plano de Dados (Data Plane): Arquitetura BitTorrent Soberana
 A Jamii adota uma arquitetura de rede de "Plano Duplo", onde o **BitTorrent** atua como o músculo de transporte para dados pesados, operando em total isolamento da sinalização crítica de consenso.

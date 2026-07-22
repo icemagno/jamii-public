@@ -139,6 +139,11 @@ Para facilitar a adoção e integração com a camada de Identidade Soberana:
 - [ ] **Restricted Seed Mode**: Adicionar suporte a um modo puramente consumidor no `pkg/torrent/engine.go` (definindo `cfg.Seed = false` e silenciando loops de seeding se o nó for um validador/nó comum).
 - [ ] **Validator Offloading**: Configurar nós validadores e comuns para atuarem apenas como baixadores no BitTorrent Swarm, limitando a atividade de *seeding* (geração de arquivos virtuais/reais e upload) estritamente aos nós de arquivo (*Archiver*), conservando CPU e largura de banda de I/O de disco nos nós de consenso.
 
+### 🆕 Sprint 8.3: Criptografia Pós-Quântica de Transporte (P2P Handshake Seguro)
+- [ ] **KEM Handshake no DTS**: Estender o protocolo de handshake do DTS (`pkg/dts/engine.go`) para realizar um acordo de chaves efêmero pós-quântico (ML-KEM-512) no estabelecimento do canal.
+- [ ] **Strong Binding no P2P**: Assinar a chave pública efêmera ML-KEM com a chave de identidade persistente ML-DSA-65 do nó para prevenir ataques Man-in-the-Middle (MitM) durante o handshake de rede.
+- [ ] **Canal Criptografado AES-GCM**: Criptografar simetricamente todo o tráfego do socket TCP do DTS após o handshake usando a chave gerada, garantindo confidencialidade absoluta contra espionagem e descriptografia retroativa (harvest-now-decrypt-later).
+
 ### 🦴 Ultra-Compactação de Skeleton Blocks (Bi-Polar Short IDs)
 Para minimizar a largura de banda durante o consenso sem perder a precisão:
 - [x] **Bi-Polar Short IDs:** Em vez de transmitir hashes de 32 bytes das transações, o Proposer enviará um identificador de **6 bytes** composto pelos **3 primeiros e 3 últimos bytes** do hash original (ex: `[0:3] + [29:32]`). [CONCLUÍDO - 03/06/2026]
