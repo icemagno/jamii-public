@@ -10,6 +10,7 @@ Enquanto a maioria das redes atuais (Ethereum, Solana, etc.) é vulnerável ao *
 *   **And-Gate Security (Portão-E):** Exigência mandatória de duas provas simultâneas para autorizar transações: `Verify(Secp256k1) AND Verify(ML-DSA-65)`.
 *   **Strong Binding:** Fusão matemática entre a mensagem da transação e o par de chaves (Clássica + Quântica), impedindo ataques de "Mix-and-Match".
 *   **ML-DSA-65 (Dilithium):** Implementação do padrão NIST de assinaturas baseadas em reticulados (Lattices).
+*   **Signature Agility (Agilidade Criptográfica):** Preparação arquitetural para a transição criptográfica ágil. Todas as identidades e assinaturas utilizam um prefixo auto-descritivo (Algorithm ID de 1 byte). Isso possibilita a substituição ou adição de novos algoritmos PQC (como Falcon ou SPHINCS+) com facilidade através de interfaces unificadas ([interface.go](file:///c:/Magno/Projetos/jamii/pkg/crypto/signer/interface.go)), sem poluir ou quebrar contratos com as camadas superiores (VM, StateDB ou Wallet).
 
 ## 🆔 2. Identidade Unificada (Architecture Shadowless)
 O Jamii elimina a necessidade de "Contas de Sombra" ou migrações complexas de saldo ao evoluir a segurança.

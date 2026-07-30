@@ -3,12 +3,13 @@
     "chainId": "2026",
     "isFreeGas": false,
     "treeType": 2,
-    "blockPeriod": 7,
-    "requestTimeout": 20,
-    "maxTxsPerBlock": 1000,
+    "blockPeriod": 3,
+    "requestTimeout": 10,
+    "maxTxsPerBlock": 500,
     "maxMempoolSlotSize": 15000,
     "maxMempoolMemorySize": 536870912,
-    "validatorContract": "0x00000000000000000000000000000000fffffffd"
+    "validatorContract": "0x00000000000000000000000000000000fffffffd",
+	"maxTxBatchSize": 50
   },
   "initialBaseFee": "1000000000",
   "timestamp": 1746758400,
