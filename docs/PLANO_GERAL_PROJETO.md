@@ -1,20 +1,20 @@
 # Jamii Blockchain: Master Plan & Roadmap Industrial
 
-Este documento define o planejamento estratégico de longo prazo para a construção da Jamii Blockchain, consolidando a inspiração técnica em protocolos estabelecidos (Besu/Geth) com a inovação soberana em criptografia híbrida e PQC.
+Este documento define o planejamento estratégico de longo prazo para a construção da **Jamii Blockchain**, consolidando a inspiração técnica em protocolos estabelecidos (Hyperledger Besu / Go-Ethereum) com a inovação soberana em criptografia híbrida pós-quântica (**ML-DSA-65 / Dilithium L3**), **Verkle Trie Homomórfica**, **Bonsai Turbo** e arquitetura de **Plano Duplo P2P (DTS + BitTorrent)**.
 
 ---
 
 ## 🏗️ Fase 1: Motores e Fundações (CONCLUÍDA)
 *Objetivo:* Construir os componentes atômicos, performáticos e seguros.
-- [x] **Módulo CRYPTO:** Implementação soberana de assinaturas híbridas (Secp256k1 + ML-DSA) com Strong Binding.
-- [x] **Módulo ENCODING:** Serialização SSZ-based otimizada para payloads extensos.
-- [x] **Módulo STORE:** Camada de persistência resiliente baseada no PebbleDB (100% Go).
+- [x] **Módulo CRYPTO:** Implementação soberana de assinaturas híbridas (Secp256k1 + ML-DSA-65) com Strong Binding (`SovereignSigner`). [CONCLUÍDO]
+- [x] **Módulo ENCODING:** Serialização SSZ-based otimizada para payloads extensos. [CONCLUÍDO]
+- [x] **Módulo STORE:** Camada de persistência resiliente baseada no PebbleDB (100% Go). [CONCLUÍDO]
 - [x] **Módulo TRIE:** 
-    - [x] Sparse Merkle Tree (SMT) de alta performance.
-    - [x] **Verkle Tree Industrial** (256-vias com IPA).
-    - [x] **Trie Factory** (Abstração total entre motores).
-- [x] **Módulo STATE (Unified Identity):** Identidade Mirror (0x) e Sovereign compartilhando o mesmo estado nativo.
-- [x] **Módulo CONSENSUS:** Máquina de estados IBFT 2.0 adaptada para o ecossistema Jamii.
+    - [x] Sparse Merkle Tree (SMT) de alta performance. [CONCLUÍDO]
+    - [x] **Verkle Tree Industrial** (256-vias com IPA e curva Bandersnatch). [CONCLUÍDO]
+    - [x] **Trie Factory** (Abstração total entre motores). [CONCLUÍDO]
+- [x] **Módulo STATE (Unified Identity):** Identidade Mirror (0x) e Sovereign (`jamii1...`) compartilhando o mesmo estado nativo de 20 bytes no StateDB. [CONCLUÍDO]
+- [x] **Módulo CONSENSUS:** Máquina de estados IBFT 2.0 adaptada para o ecossistema Jamii. [CONCLUÍDO]
 
 ---
 
@@ -22,325 +22,171 @@ Este documento define o planejamento estratégico de longo prazo para a constru�
 *Objetivo:* Transformar módulos isolados em um nó funcional e garantir a integridade da transição de estado.
 
 ### 🧹 Saneamento Arquitetural (Dívida Bloqueante)
-- [x] **Integridade da Transação (pkg/encoding):** Adição do campo `GasPrice` e suporte SSZ.
-- [x] **Integridade do Cabeçalho (pkg/core/types):** Adição do campo `ReceiptsRoot`.
-- [x] **Fluxo de Gas (Buy Gas):** Débito preventivo de `GasLimit * GasPrice` funcional no `StateProcessor`.
+- [x] **Integridade da Transação (`pkg/encoding`):** Adição do campo `GasPrice` e suporte SSZ. [CONCLUÍDO]
+- [x] **Integridade do Cabeçalho (`pkg/core/types`):** Adição do campo `ReceiptsRoot`. [CONCLUÍDO]
+- [x] **Fluxo de Gas (Buy Gas):** Débito preventivo de `GasLimit * GasPrice` funcional no `StateProcessor`. [CONCLUÍDO]
 - [x] **Fluxo de Gas (Refund Gas):** Estorno de saldo não utilizado (`GasLimit - GasUsed`) ao remetente após execução. [CONCLUÍDO - 04/05/2026]
-- [x] **Cálculo de ReceiptsRoot:** Implementar agregação Merkle de recibos no bloco e validação no `Processor`. [CONCLUÍDO - 04/05/2026]
-- [x] **Ghost Root Killer (pkg/core/processor):** Implementação de snapshots de transação e garantia de StateRoot determinístico em blocos vazios. [CONCLUÍDO - 11/05/2026]
-- [x] **Validação de Preço Mínimo em Bloco (Anti-Proposer Malicious):** Implementar trava no `StateProcessor` que rejeita transações com `GasPrice` inferior ao mínimo da rede. [CONCLUÍDO - 28/05/2026]
+- [x] **Cálculo de ReceiptsRoot:** Agregação Merkle de recibos no bloco e validação no `Processor`. [CONCLUÍDO - 04/05/2026]
+- [x] **Ghost Root Killer (`pkg/core/processor`):** Snapshots de transação e garantia de StateRoot determinístico em blocos vazios. [CONCLUÍDO - 11/05/2026]
+- [x] **Validação de Preço Mínimo em Bloco:** Trava no `StateProcessor` que rejeita transações com `GasPrice` inferior ao mínimo da rede. [CONCLUÍDO - 28/05/2026]
 
 ### 🏗️ Orquestração de Execução
-- [x] **Standard Log (Log4J Style):** Unificação da telemetria com motor assíncrono (FIFO).
-- [x] **Módulo NODE (Orquestrador):** Gerenciamento do ciclo de vida dos motores (EVM, Consenso, Store).
-- [x] **Integração VM/Processor:** O `StateProcessor` agora orquestra a execução de bytecode via `EVM.Run`.
+- [x] **Standard Log (Log4J Style):** Unificação da telemetria com motor assíncrono (FIFO). [CONCLUÍDO]
+- [x] **Módulo NODE (Orquestrador):** Gerenciamento do ciclo de vida dos motores (EVM, Consenso, Store). [CONCLUÍDO]
+- [x] **Integração VM/Processor:** O `StateProcessor` orquestra a execução de bytecode via `EVM.Run`. [CONCLUÍDO]
 - [x] **Fase P3 da VM (Jump Table):** Migração do loop de execução para despacho via tabela (Besu Compliance). [CONCLUÍDO - 28/05/2026]
 - [x] **Ativação de Contract Creation (Top-Level):**
     - [x] Habilitar fluxo `tx.To == nil` no `StateProcessor`.
-    - [x] Implementar regra de derivação de endereço baseada no nonce do sender para transações externas.
+    - [x] Regra de derivação de endereço baseada no nonce do sender (`Create(sender, nonce)`).
     - [x] Adicionar campo `ContractAddress` no objeto `Receipt` para conformidade industrial. [CONCLUÍDO - 28/05/2026]
-- [x] **Main Loop & Lifecycle:** Implementação do laço de trabalho que orquestra a transição de alturas e quórum sincronizado. [CONCLUÍDO - 11/05/2026]
-- [x] **CLI Framework:** Implementação de comandos e flags via cobra (cmd/jamii). [CONCLUÍDO - 11/05/2026]
-- [x] **Configuração Dinâmica:** Suporte a YAML/JSON para Gênese.
-- [x] **Identidade de Rede Imutável:** Persistência de parâmetros pétreos no DB (Besu Compliance). [CONCLUÍDO - 28/05/2026]
-- [x] **Mecanismo LRU (pkg/util/cache):** Cache industrial para o StateDB (MaxWarmTries). [CONCLUÍDO - 21/05/2026]
+- [x] **Main Loop & Lifecycle:** Laço de trabalho que orquestra a transição de alturas e quórum sincronizado. [CONCLUÍDO - 11/05/2026]
+- [x] **CLI Framework:** Implementação de comandos e flags via Cobra (`cmd/jamii`). [CONCLUÍDO - 11/05/2026]
+- [x] **Configuração Dinâmica:** Suporte a YAML (`config.yaml`) e JSON para Gênese (`genesis.json`). [CONCLUÍDO]
+- [x] **Identidade de Rede Imutável (`meta:chain`):** Persistência de parâmetros pétreos no PebbleDB (Besu Compliance). [CONCLUÍDO - 28/05/2026]
+- [x] **Mecanismo LRU (`pkg/util/cache`):** Cache industrial para o StateDB (`MaxWarmTries`). [CONCLUÍDO - 21/05/2026]
 
 ---
 
 ## 🌐 Fase 3: Rede Soberana (P2P Networking) (CONCLUÍDA)
 *Objetivo:* Comunicação descentralizada, robusta e imune a ataques de eclipse.
-- [x] **Discovery Service:** Implementação de lista estática e transição para Kademlia (DHT).
-- [x] **Gossip Protocol (Turbine-style):** Disseminação não-linear e fragmentada de propostas via DTS (Block Sharding) para mitigar o peso das assinaturas PQC.
-- [x] **Recuperação Reativa de TXs:** Mecanismo sob demanda para reconstrução de compact blocks. [CONCLUÍDO 08/05/2026]
-- [x] **Timeout Configurável (BlockPeriod):** Implementação da configuração de tempo base do consenso via `genesis.json`, permitindo o ajuste fino da rede sem alteração de código. [CONCLUÍDO 08/05/2026]
-- [x] **Sync Engine Resilience:** Implementação de drenagem de canais, ignorância de blocos atrasados e verificação recursiva "Catch the Bus" no boot. [CONCLUÍDO - 11/05/2026]
-- [x] **Cartório Local (pkg/crypto/signer):** Persistência de chaves públicas PQC em `identities.json` para resiliência de reinício e validação histórica. [CONCLUÍDO - 11/05/2026]
+- [x] **Discovery Service:** Implementação de lista estática e resolução de pares. [CONCLUÍDO]
+- [x] **Engine P2P DTS (Dual-Channel):** Disseminação não-linear via canais separados **EXPRESS** (consenso IBFT em < 1ms) e **BULK** (blocos e transações diretas `MsgData`). [CONCLUÍDO]
+- [x] **Dual-Channel Gatekeeper (`IsPeerFullyConnected`):** Validação atômica de conectividade dos canais gêmeos antes de liberar tráfego P2P. [CONCLUÍDO - 11/08/2026]
+- [x] **Proteção Anti-OOM DoS:** Leitura incremental de payloads de rede em chunks de 64KB no DTS. [CONCLUÍDO - 31/07/2026]
+- [x] **SafeClose Idempotente:** Encerramento seguro de sockets P2P via `sync.Once` prevenindo pânicos de goroutine. [CONCLUÍDO - 31/07/2026]
+- [x] **Mandato de Identificação Soberana Bech32:** Endereçamento obrigatoriamente Soberano no BitTorrent Data Plane (Diretiva 13) e formato `ENDEREÇO@host:port` no Control Plane DTS (Diretiva 14). [CONCLUÍDO]
+- [x] **Recuperação Reativa de TXs:** Mecanismo sob demanda para reconstrução de compact blocks. [CONCLUÍDO - 08/05/2026]
+- [x] **Sync Engine Resilience:** Drenagem de canais, ignorância de blocos atrasados e verificação "Catch the Bus" no boot. [CONCLUÍDO - 11/05/2026]
+- [x] **Cartório Local (`pkg/crypto/signer`):** Persistência de chaves públicas PQC em `identities.json` para resiliência de reinício. [CONCLUÍDO - 11/05/2026]
 - [x] **Sincronismo de Segurança (Sync-to-Consensus):** Blindagem do motor para atuar como Observador durante o sync, evitando forks por votos prematuros. [CONCLUÍDO - 28/05/2026]
-- [ ] **Snap Sync:** Mecanismo de sincronização rápida (State Sync).
 
 ---
 
-## 🏛️ Fase 4: Maturidade Industrial & Conformidade (Benchmarking Besu)
-Baseado na análise de logs de produção do Besu, os seguintes itens devem ser integrados para alcançar o nível industrial:
+## 🏛️ Fase 4: Maturidade Industrial & Conformidade (Benchmarking Besu) (CONCLUÍDA)
+*Objetivo:* Conformidade com especificações industriais e suporte total a Smart Contracts.
 
-#### 🏛️ Outros itens de Maturidade:
-- [x] **Gestão de Metadados de Versão:** Persistir a versão do protocolo e do layout do banco de dados para evitar conflitos de identidade e facilitar migrações. [CONCLUÍDO - 28/05/2026]
-- [ ] **Formal Verification:** Auditoria matemática dos caminhos críticos.
-
-#### 🆕 Sprint 4.2: Ativação de Smart Contracts (Roadmap de Deploy)
-Para transformar a Jamii em uma rede de estado programável:
-- [x] **Fluxo de Criação (Contract Creation):**
+- [x] **Gestão de Metadados de Versão:** Persistir versão do protocolo e layout do banco de dados (`meta:chain`). [CONCLUÍDO - 28/05/2026]
+- [x] **Fluxo de Criação de Contratos (Contract Creation):**
     - [x] Habilitar detecção de `tx.To == nil` no `StateProcessor`.
-    - [x] Implementar regra de derivação de endereço `Create(sender, nonce)`.
+    - [x] Derivação de endereço `Create(sender, nonce)`.
     - [x] Persistência de Bytecode e Storage na Verkle Tree. [CONCLUÍDO - 28/05/2026]
 - [x] **Motor de Chamada (Contract Call):**
-    - [x] Implementar o roteamento de transações para o interpretador da JamiiVM. [CONCLUÍDO - 03/06/2026]
-    - [x] Adicionar campo `ContractAddress` nos Recibos (`Receipt`) para rastreabilidade de deploy. [CONCLUÍDO - 28/05/2026]
-- [ ] **Integração de Pré-compilados:**
-    - [ ] **Identity Bridge (Sovereign Address Bridge):** Conversão Nativa ultra-rápida ETH <-> Jamii Address (Bech32). Alocado no final do espaço de endereçamento (ex: `0x...FF`) para evitar conflitos com o Geth.
-    - [ ] Validador PQC On-Chain: Verificação de assinaturas ML-DSA dentro da EVM.
+    - [x] Roteamento de transações para a JamiiVM. [CONCLUÍDO - 03/06/2026]
+    - [x] Adicionar campo `ContractAddress` nos Recibos (`Receipt`). [CONCLUÍDO - 28/05/2026]
+- [x] **Integração de Pré-compilados Soberanos (Estratégia Decrescente):**
+    - [x] **ValidatorRegistry Contract:** Contrato inteligente pré-compilado no endereço `0x00...00fffffffd` para registro de validadores on-chain. [CONCLUÍDO - 05/06/2026]
+    - [x] **Identity Bridge:** Conversão nativa `ETH <-> Jamii Address (Bech32)` via pré-compilados. [CONCLUÍDO - 05/06/2026]
 
 ---
 
-### 🏗️ Fase 5: Saneamento Arquitetural & Desacoplamento (CONCLUÍDA)
-Para resolver o alto grau de acoplamento detectado e eliminar os gargalos de CPU na finalização de blocos:
-- [x] **Cálculo Incremental Homomórfico (Verkle Optimization):** Migrar da re-computação total O(N) para atualizações O(1) utilizando a propriedade homomórfica dos compromissos IPA (C' = C + delta * G_i). [CONCLUÍDO - 28/05/2026]
-    - *Objetivo:* Reduzir o tempo de finalização de blocos de segundos para milissegundos, eliminando o gargalo de CPU na curva Bandersnatch.
-- [x] **Configuração por Contexto:** Substituir a passagem de variáveis primitivas por objetos de contexto (`ChainConfig`). [CONCLUÍDO - 28/05/2026]
-- [x] **Dependency Inversion (DI):** Refatorar os construtores de `Controller`, `Round` e `HeightManager` para dependerem de abstrações de configuração. [CONCLUÍDO - 28/05/2026]
-- [x] **Redução de Boilerplate:** Unificar a orquestração de boot. [CONCLUÍDO - 28/05/2026]
+## 🏗️ Fase 5: Saneamento Arquitetural & Desacoplamento (CONCLUÍDA)
+- [x] **Cálculo Incremental Homomórfico (Verkle Optimization):** Atualização $O(1)$ utilizando a propriedade homomórfica dos compromissos IPA ($C' = C + \Delta \cdot G_i$). [CONCLUÍDO - 28/05/2026]
+- [x] **Configuração por Contexto (`ChainConfig`):** Substituição de primitivos pelo contexto global `ChainConfig`. [CONCLUÍDO - 28/05/2026]
+- [x] **Dependency Inversion (DI):** Refatoração dos construtores de `Controller`, `Round` e `HeightManager`. [CONCLUÍDO - 28/05/2026]
+- [x] **Redução de Boilerplate:** Unificação da orquestração de boot. [CONCLUÍDO - 28/05/2026]
 
-### 🛠️ Fase 6: Ecossistema & Kit de Ferramentas (SDK) (EM CURSO)
-Para facilitar a adoção e integração com a camada de Identidade Soberana:
+---
+
+## 🛠️ Fase 6: Ecossistema & Kit de Ferramentas (SDK) (EM CURSO)
 - [x] **Jamii Java SDK (Core):** Implementação industrial completa em Java/Spring Boot. [CONCLUÍDO - 28/05/2026]
     - [x] Suporte total a Identidade Soberana Híbrida (Secp256k1 + ML-DSA-65).
     - [x] Motor de assinatura com *Strong Binding* compatível com o nó Go.
-    - [x] Gestão de Keystores industriais (Criptografia AES-GCM com derivação SCrypt).
-    - [x] Cliente JSON-RPC tipado para integração com dApps e sistemas legados.
-- [x] **Identity Bridge (Sovereign Precompiled):** Implementação do contrato pré-compilado em Go no endereço `0xFF...FF` para conversão Bech32. [CONCLUÍDO - 05/06/2026]
-- [x] **Sovereign Bridge (Reverse Conversion):** Implementação da decodificação Bech32 no endereço `0xFF...FE` para retorno ao Mirror (0x). [CONCLUÍDO - 05/06/2026]
-- [x] **VM Gas Fix:** Correção da contabilidade de gás para chamadas nativas (Refund System). [CONCLUÍDO - 05/06/2026]
-- [x] **Block Explorer (JamiiScan) & Wallet UI:** Interface Light Premium integrada à carteira de testes, com suporte a Login (Keystore/Mnemônico BIP-39) e confirmação de transferência com modal customizado. [CONCLUÍDO - 18/06/2026]
-- [x] **Smart Contracts Gate:** Roteador e implantador dinâmico de contratos Solidity via API REST e frontend do explorer, com inputs gerados a partir do parse da ABI. [CONCLUÍDO - 26/06/2026]
-- [x] **Otimizações do Banco de Dados Postgres (WAL/Unnest):** Indexação secundária e persistência de endereços em lote via unnest para remover gargalos de escrita e contenção de WAL. [CONCLUÍDO - 18/06/2026]
-- [ ] **Jamii Dev Kit (Solidity):** Criar biblioteca de ferramentas oficiais (`Identity.sol`) para abstrair chamadas de baixo nível (`staticcalls`) aos pré-compilados da Jamii, garantindo segurança e tipagem forte para desenvolvedores de dApps.
-- [ ] **Compiler Integration:** Integrar o Jamii Dev Kit ao compilador soberano para resolução automática de imports de sistema.
+    - [x] Gestão de Keystores industriais (Criptografia AES-GCM com SCrypt).
+    - [x] Cliente JSON-RPC tipado para integração com dApps.
+- [x] **Block Explorer (JamiiScan) & Wallet UI:** Interface Light Premium integrada à carteira de testes, com suporte a Login (Keystore/Mnemônico BIP-39), roteamento Hash (`#/wallet`, `#/block`, `#/tx`), reconciliação DOM e modais de confirmação. [CONCLUÍDO - 18/06/2026]
+- [x] **Smart Contracts Gate:** Roteador e implantador dinâmico de contratos Solidity via API REST e frontend do explorer. [CONCLUÍDO - 26/06/2026]
+- [x] **Otimizações do Banco de Dados Postgres:** Indexação secundária de 11 colunas e fatiamento em lote de 1.000 contas para eliminação de gargalos de WAL. [CONCLUÍDO - 18/06/2026]
+- [ ] **Jamii Dev Kit (Solidity):** Biblioteca oficial (`Identity.sol`) para abstrair `staticcalls` aos pré-compilados.
+- [ ] **Compiler Integration:** Integrar o Jamii Dev Kit ao compilador soberano para resolução automática de imports.
 - [ ] **Jamii Go SDK:** Unificar as ferramentas de carteira e cliente RPC em um pacote SDK Go reutilizável.
 
 ---
 
 ## 🍃 Fase 7: Soberania Stateless (Nós Sem Disco) (CONCLUÍDA - 06/07/2026)
-*Objetivo:* Permitir que dispositivos de baixa capacidade (Android, IoT) participem da validação sem armazenar a cadeia completa.
+*Objetivo:* Permitir que dispositivos de baixa capacidade participem da validação sem armazenar a cadeia completa.
 
-### 🧬 Verkle Witnesses & Stateless Execution
-- [x] **Protocolo de Testemunha (Execution Witness):** Implementar a geração de provas Verkle compactas durante a proposta de bloco. [CONCLUÍDO - 06/07/2026]
-- [x] **Mensagem DTS Híbrida:** Criar o tipo `MSG_BLOCK_WITH_WITNESS` para propagação de blocos auto-contidos criptograficamente. [CONCLUÍDO - 06/07/2026]
-- [x] **Validação Stateless:** Habilitar o `StateProcessor` a validar blocos usando apenas a `StateRoot` e a Witness, sem consultar o `StateDB` local. [CONCLUÍDO - 06/07/2026]
-
-### 🛡️ Guardian Nodes (Nós Guardiões)
-- [ ] **Perfil de Hardware Android:** Otimizar o consumo de recursos para permitir que o nó rode em background em smartphones.
-- [ ] **Consenso de Vigilância:** Implementar o papel de "Nó Guardião", que vigia a rede e emite alertas de fraude sem precisar de minerar ou armazenar TBs de dados.
-- [ ] **SDK Java Native Integration:** Expandir o SDK Spring Boot para suportar a validação leve de cabeçalhos e provas de estado.
-
-### ⏳ State Expiry (Expiração de Estado)
-- [ ] **Gestão de Buffer Circular de Estado:** Implementar lógica para "esquecer" contas inativas e delegar a prova de histórico para nós de arquivo.
-- [ ] **Incentivo de Arquivo:** Definir modelo econômico para nós que mantêm o histórico completo (Full Archive Nodes).
+- [x] **Protocolo de Testemunha (Execution Witness):** Geração de provas Verkle compactas durante a proposta de bloco. [CONCLUÍDO - 06/07/2026]
+- [x] **Mensagem DTS Híbrida (`MSG_BLOCK_WITH_WITNESS`):** Propagação de blocos auto-contidos criptograficamente. [CONCLUÍDO - 06/07/2026]
+- [x] **Validação Stateless (`StateProcessor`):** Habilidade de validar blocos usando apenas o `StateRoot` e a Witness, sem consultar o PebbleDB local. [CONCLUÍDO - 06/07/2026]
+- [x] **Execução de Nós em Modo 100% Stateless (`stateless: true`):** Nó leitor operando inteiramente em RAM sem banco em disco. [CONCLUÍDO - 06/07/2026]
 
 ---
 
-## ⚡ Fase 8: Sincronismo Híbrido e Throughput (PLANEJADA)
+## ⚡ Fase 8: Sincronismo Híbrido e Throughput (CONCLUÍDA - Julho/2026)
 *Objetivo:* Escalar a rede para volumes massivos de dados sem comprometer a latência do consenso.
 
-### 🆕 Sprint 8.1: Chaves Públicas de Validadores no Genesis (Resolução de Boot Offline)
-- [ ] **Genesis PQC Keys**: Alterar a struct `Genesis` em `pkg/node/config.go` e a especificação do `genesis.json` para permitir a inclusão opcional das chaves públicas completas (ML-DSA) dos validadores do bloco inicial.
-- [ ] **Bootstrap Key Seeding**: Atualizar o orquestrador do nó para pré-carregar e registrar essas chaves em memória no `IdentityRegistry` durante a inicialização (boot), permitindo a validação síncrona de blocos históricos sem dependência de handshakes DTS dinâmicos prévios.
-
-### 🆕 Sprint 8.2: Política de Seeding Torrent Restrita (Archiver-Only Seeding)
-- [ ] **Restricted Seed Mode**: Adicionar suporte a um modo puramente consumidor no `pkg/torrent/engine.go` (definindo `cfg.Seed = false` e silenciando loops de seeding se o nó for um validador/nó comum).
-- [ ] **Validator Offloading**: Configurar nós validadores e comuns para atuarem apenas como baixadores no BitTorrent Swarm, limitando a atividade de *seeding* (geração de arquivos virtuais/reais e upload) estritamente aos nós de arquivo (*Archiver*), conservando CPU e largura de banda de I/O de disco nos nós de consenso.
-
-### 🆕 Sprint 8.3: Criptografia Pós-Quântica de Transporte (P2P Handshake Seguro)
-- [ ] **KEM Handshake no DTS**: Estender o protocolo de handshake do DTS (`pkg/dts/engine.go`) para realizar um acordo de chaves efêmero pós-quântico (ML-KEM-512) no estabelecimento do canal.
-- [ ] **Strong Binding no P2P**: Assinar a chave pública efêmera ML-KEM com a chave de identidade persistente ML-DSA-65 do nó para prevenir ataques Man-in-the-Middle (MitM) durante o handshake de rede.
-- [ ] **Canal Criptografado AES-GCM**: Criptografar simetricamente todo o tráfego do socket TCP do DTS após o handshake usando a chave gerada, garantindo confidencialidade absoluta contra espionagem e descriptografia retroativa (harvest-now-decrypt-later).
-
-### 🦴 Ultra-Compactação de Skeleton Blocks (Bi-Polar Short IDs)
-Para minimizar a largura de banda durante o consenso sem perder a precisão:
-- [x] **Bi-Polar Short IDs:** Em vez de transmitir hashes de 32 bytes das transações, o Proposer enviará um identificador de **6 bytes** composto pelos **3 primeiros e 3 últimos bytes** do hash original (ex: `[0:3] + [29:32]`). [CONCLUÍDO - 03/06/2026]
-- [x] **Mitigação de Colisão:** O espaçamento bi-polar aumenta a entropia em relação a um truncamento sequencial. Caso (raro) ocorra colisão na MemPool do nó receptor, o nó utilizará o `TxRoot` do cabeçalho como prova matemática para rejeitar a montagem incorreta e solicitar a transação específica via P2P. [CONCLUÍDO - 03/06/2026]
-- [ ] **Impacto:** Redução de 48 KB para **~9 KB** por bloco (para 1.500 TXs), melhorando a resiliência em redes de alta latência e reduzindo picos de I/O na placa de rede.
-
-### 🛡️ Peer Scoring & Network Protection (Sybil Mitigation)
-- [ ] **Peer Scoring System:** Implementar um motor de reputação que avalia a qualidade dos dados enviados por cada par (DTS/P2P).
-- [ ] **Optimistic Punishment:** Nós (especialmente os Stateless) punem severamente vizinhos que propagam transações inválidas ou esqueletos de blocos malformados.
-- [ ] **Persistent Blacklisting:** Criação de uma lista negra persistente no disco para evitar a reconexão de nós detectados como maliciosos ou spammers.
-- [ ] **Impacto:** Proteção vital para a viabilidade de nós Stateless e para a saúde da MemPool global.
-
-### ⏱️ Otimizações de Latência e Pipeline (High-Speed Throughput)
-- [ ] **Optimistic Block Pre-Assembly (Chained State Oracle):** Pesquisar e implementar a capacidade de o próximo Proposer montar e pré-executar seu bloco em RAM. [DESATIVADO - 10/07/2026] (Desativado permanentemente para evitar condições de corrida de I/O no PebbleDB e concorrência na RAM)
-- [ ] **Late-Stamping Header:** Mecanismo para injeção imediata de `ParentHash` e `StateRoot` em blocos pré-montados para reduzir o gap entre rodadas de consenso. [DESATIVADO - 10/07/2026] (Desligado junto com a especulação ativa)
-- [ ] **Debounce de Sync (Catch-up Delay):** Adicionar uma tolerância temporal (ex: 200ms) antes do disparo de catch-up pelo SyncManager, evitando concorrência redundante com o processo de finalização e commit de blocos pelo consenso local.
-- [x] **Mempool BaseFee Startup Sync:** Sincronizar o BaseFee inicial da MemPool com o valor do último bloco persistido no PebbleDB ao bootar o nó. [CONCLUÍDO - 10/07/2026]
-- [ ] **Impacto:** Redução de tráfego DTS espúrio e eliminação de conflitos de gravação no banco de dados entre threads de Sync e Consenso. Redução drástica do tempo de ociosidade da rede.
-
-### 🏛️ Arquitetura de Plano Duplo (Dual-Plane Transport)
-Após estudo técnico, a Jamii adotará uma estratégia híbrida para o transporte de dados:
-
-1.  **Plano de Controle (DTS Custom):**
-    *   **Foco:** Baixa latência.
-    *   **Responsabilidade:** Votos de consenso (IBFT2), sinalização de rounds, compact blocks e transações individuais.
-2.  **Plano de Dados (BitTorrent via `anacrolix/torrent`):** [CONCLUÍDO - 04/06/2026]
-    *   **Foco:** Alto rendimento (Throughput).
-    *   **Responsabilidade:** Download massivo de blocos históricos (State Sync), propagação de blocos cheios (Full Blocks) e distribuição de snapshots de estado.
-    *   **Identificação Soberana (Peer ID):** A identificação de peers na rede torrent deve utilizar obrigatoriamente o **Endereço Soberano (Bech32, ex: `jamii1...`)** em vez do Mirror Address (Hex). Isso garante a consistência da identidade através de todos os planos de rede (Controle e Dados).
-    *   **Arquitetura Soberana (Trusted Peers):** Diferente de clientes BitTorrent convencionais, a Jamii injeta automaticamente a topologia de validadores como `Trusted Peers` em cada torrent. Isso elimina a dependência de DHTs públicos ou Trackers, garantindo conectividade P2P direta, imediata e segura entre os nós da rede.
-    *   **Estratégia Zero-Copy (Virtual Storage):** O motor BitTorrent não duplica dados no disco. Ele acessa o banco de dados (StateDB) através de um wrapper de "Arquivo Virtual", serializando pedaços da chain sob demanda. Isso garante que o uso de disco não dobre, mantendo a eficiência industrial.
-    *   **Isolamento de Consenso:** O tráfego pesado de dados flui em paralelo ao DTS, garantindo que o download de blocos passados não gere latência (jitter) nas mensagens de voto em tempo real.
-    *   **Benefício:** Utiliza o poder do *Swarm* (enxame) para baixar dados de múltiplos vizinhos simultaneamente, otimizando o uso de banda em redes distribuídas.
-
-#### 🧪 Experiência de Validação de Malha (Mesh Test) [CONCLUÍDO - 04/06/2026]
-Para validar a robustez da infraestrutura BitTorrent, foi implementado um laboratório isolado:
-- **Payload:** Cada nó gera um arquivo de 100MB (`ID[:5].bin`).
-- **Descoberta:** Anunciador HTTP em porta dedicada (`TorrentPort + 10000`).
-- **Swarm Logic:** Logs em nível DEBUG comprovam a recepção de chunks de múltiplas fontes simultâneas.
-- **Isolamento:** A rede de dados opera de forma totalmente independente do consenso IBFT.
-
-### 🏗️ Integração e Ecossistema (JSON-RPC) (CONCLUÍDA)
-*Objetivo:* Expor a inteligência da blockchain para o mundo exterior.
-- [x] **Engine API:** Interface Consenso <-> Execução.
-- [x] **JSON-RPC 2.0 (Basic):** Suporte a métodos de leitura (Saldo, Nonce, ChainID).
-- [x] **JSON-RPC 2.0 (Transaction):** Suporte a `eth_sendRawTransaction`. [CONCLUÍDO - 28/05/2026]
-- [ ] **Pub/Sub:** Notificações via WebSockets para eventos de contratos.
+- [x] **Genesis PQC Keys (Boot Offline):** Inclusão opcional de chaves públicas ML-DSA dos validadores no `genesis.json` e pré-carga no `IdentityRegistry` durante o boot. [CONCLUÍDO - 14/07/2026]
+- [x] **BitTorrent Seeding Restrito & Multi-Peer Sync:** Nós validadores operam como baixadores no BitTorrent e o seeding é delegado aos nós Arquivadores (*Archiver-Only Seeding*). [CONCLUÍDO - 14/07/2026]
+- [x] **Fallback de Torrent Sync (Diretiva 19):** Transição automática do Torrent Sync para P2P Sequencial em caso de falhas consecutivas. [CONCLUÍDO - 14/07/2026]
+- [x] **Bi-Polar Short IDs (Bi-Polar Skeleton):** Identificadores compactos de **6 bytes** (3 bytes iniciais + 3 bytes finais do hash), reduzindo a banda de bloco em ~95%. [CONCLUÍDO - 03/06/2026]
+- [x] **Mempool BaseFee Startup Sync:** Sincronização do BaseFee inicial da MemPool com o valor do último bloco persistido no PebbleDB ao bootar o nó. [CONCLUÍDO - 10/07/2026]
+- [x] **Arquitetura de Plano Duplo (DTS Control + BitTorrent Data Plane):** Separação física de tráfego de controle (DTS) e dados massivos (BitTorrent com Virtual Storage Zero-Copy). [CONCLUÍDO - 04/06/2026]
 
 ---
 
-### 🚀 Fase 5: Estabilização e Mainnet (EM CURSO)
-*Objetivo:* Auditorias, stress tests em larga escala e lançamento oficial.
+## ⚡ Fase 9: Aceleração de Quórum por Witness, Resiliência e Poda (CONCLUÍDA - Agosto/2026)
 
-#### ✅ Sprint 5.1: Mempool Industrial & Resource-Aware (Resiliência Anti-Flood) - [CONCLUÍDO - 03/06/2026]
-Para garantir que a Jamii suporte fluxos massivos de transações PQC sem degradação de performance ou risco de OOM (Out of Memory):
-- [x] **Parametrização via Genesis:** Adicionados os campos `MaxMempoolSlotSize` (10k) e `MaxMempoolMemorySize` (512MB) no `ChainConfig`.
-- [x] **Lógica de Barreira Híbrida:** Implementada verificação de transbordamento baseada em slots e memória real ocupada em RAM.
-- [x] **Check-First Validation:** Otimizado pipeline de entrada para rejeitar transações gigantes antes de realizar a verificação pesada de assinaturas quânticas.
-
-#### 🏛️ Outros itens de Estabilização:
-- [ ] **Formal Verification:** Auditoria matemática dos caminhos críticos.
-- [ ] **Penetration Testing:** Simulação de ataques bizantinos.
-- [ ] **Mainnet Genesis:** Materialização do bloco zero oficial.
-
----
-
-## ⚡ Fase 9: Aceleração de Quórum por Witness (CONCLUÍDA - 06/07/2026)
-*Objetivo:* Eliminar o gargalo de CPU/IPA na rede através da verificação assimétrica.
-
-### 🚀 Sprint 9.1: Otimização do StateProcessor
-- [x] **Modo de Validação Stateless:** Adaptar o `pkg/core/processor.go` para aceitar uma `Witness` opcional durante a execução de blocos recebidos via P2P. [CONCLUÍDO - 06/07/2026]
-- [x] **RAM-First Execution:** Se uma Witness estiver presente, o processador deve priorizar os dados da testemunha em vez de consultar o PebbleDB local, economizando ciclos de I/O. [CONCLUÍDO - 06/07/2026]
-- [x] **Pre-State Witness (Nonce Drift Fix):** Extração de nonces e saldos de partida a partir do bloco pai para a Witness stateless, corrigindo rejeições incorretas de transações por descompasso de nonces. [CONCLUÍDO - 10/07/2026]
-
-### 🛡️ Sprint 9.2: Protocolo "Bala na Agulha" (Safety)
-- [x] **Deferred Commit:** Refatorar o `consensus/ibft/controller.go` para segurar o `Commit()` de disco até a finalização do quórum total de mensagens `COMMIT`. [CONCLUÍDO - 06/07/2026]
-- [x] **Witness Injection:** Alterar o Proposer para gerar e anexar a prova Verkle/IPA (Witness) no momento do `PRE-PREPARE`. [CONCLUÍDO - 06/07/2026]
-
-### 🧪 Sprint 9.3: Witness para Storage e Otimização Binária
-- [x] **Storage Slot Tracking:** Atualizar o `StateDB` para incluir slots de storage na Witness gerada pelo Proposer. [CONCLUÍDO - 06/07/2026]
-- [x] **Binary Serialization:** Substituir o formato JSON por uma codificação binária estrita (PPQ/SSZ) para minimizar o peso do Skeleton Block. [CONCLUÍDO - 06/07/2026]
-- [x] **Suporte a Contratos Complexos:** Validar a aceleração de quórum em blocos que realizam múltiplas chamadas `SSTORE/SLOAD`. [CONCLUÍDO - 06/07/2026]
-
-### 🛡️ Sprint 9.4: Resiliência de Sincronismo e Watchdog do Consenso (CONCLUÍDA)
-- [x] **Watchdog de Proposer Não-Pronto:** Redução da janela de timeout de 10s para 2s caso o proposer designado esteja offline ou não esteja pronto (`IsProposerReady() == false`).
-- [x] **Filtros Estritos do Observer Mode:** Descarte imediato de votos de consenso (`MT_VALIDATOR_SEAL`) e novas transações de mempool (`MT_TRANSACTION`) durante a sincronização para economizar CPU e evitar saturação da mempool.
-- [x] **Simetria de Rede do Archiver:** Implementação de callbacks de conexão e anúncio inicial de status no boot e reconexões do Archiver.
-- [x] **Correção de Metadados do Torrent:** Impedir falhas por ponteiro nulo aguardando a resolução de metadados (`<-t.GotInfo()`) no download de chunks.
-- [x] **Visualização de Rede Amigável:** Logs de sincronismo agora exibem nomes lógicos amigáveis (ex: `NODE_A`) em vez de IDs Bech32.
-- [x] **Keep-Alive Ativo de Status (P2P Status Keep-Alive Ticker):** Envio de status periódico (`BroadcastStatus` a cada 5s) a partir do Watchdog para atualizar as tabelas de quórum e destravar automaticamente nós em Halt. [CONCLUÍDO - 13/07/2026]
-- [x] **Silenciamento de Emissão para Observadores (P2P Broadcast Suppression):** Bloqueio de envio de mensagens de consenso por nós observadores para evitar poluição visual e pacotes espúrios. [CONCLUÍDO - 10/07/2026]
+- [x] **Modo de Validação Stateless (`StateProcessor`):** Validação de blocos recebidos via P2P com priorização de Witness em RAM. [CONCLUÍDO - 06/07/2026]
+- [x] **Protocolo "Bala na Agulha" (Deferred Commit & Witness Injection):** Proposer anexa a Witness no `PRE-PREPARE` e segura o commit físico até a confirmação do quórum total. [CONCLUÍDO - 06/07/2026]
+- [x] **Witness para Storage e Otimização Binária:** Rastreamento de slots `SSTORE/SLOAD` na Witness e serialização binária PPQ/SSZ. [CONCLUÍDO - 06/07/2026]
+- [x] **Watchdog de Liderança & Fast-Path `READY`:** Troca de propositor em 5ms quando o líder designado estiver inativo ou em sincronização (`IsProposerReady() == false`). [CONCLUÍDO - 12/08/2026]
+- [x] **Status Keep-Alive Ticker:** Transmissão periódica de `BroadcastStatus` a cada 5s para atualização de quórum. [CONCLUÍDO - 13/07/2026]
+- [x] **Poda em Disco Automatizada em 3 Fases (Sprint 9.5):**
+    - [x] **`RootTracker`:** Mapeamento de StateRoots obsoletas além da janela de retenção `PruneRetainBlocks`. [CONCLUÍDO - 11/08/2026]
+    - [x] **`PruneManager`:** Execução atômica assíncrona de Poda de Histórico (`HistoryPruner`), Garbage Collection de Rollbacks Verkle (`PruneHistoricalRoots` em `l:*`) e Compactação Nativa PebbleDB (`CompactRange`). [CONCLUÍDO - 11/08/2026]
+    - [x] **Catch-Up Sync Protection:** Adiamento automático da poda se `SyncManager.IsBehind() == true`. [CONCLUÍDO - 11/08/2026]
+- [x] **Worker de Gravação Assíncrono (`AsyncWriteWorker` - Sprint 9.6):**
+    - [x] Gravação assíncrona de blocos no PebbleDB com fila buferizada em RAM (`maxQueueSize = 32`) e liberação de rodada de consenso em $< 5\text{ ms}$. [CONCLUÍDO - 13/08/2026]
+    - [x] Busca em 3 níveis no `handleBlockRequest` P2P (Disco $\to$ Fila RAM do Worker $\to$ `PayloadPool`). [CONCLUÍDO - 13/08/2026]
+- [x] **Resiliência P2P DTS & Handover Buffer (Sprint 9.7):**
+    - [x] `IsPeerFullyConnected`: Exigência de conectividade atômica Dual-Channel (`Bulk` + `Express`). [CONCLUÍDO - 11/08/2026]
+    - [x] `futureBlocksBuffer`: Buffer em RAM para até 2 blocos futuros, evitando pausar o consenso no `SyncManager`. [CONCLUÍDO - 12/08/2026]
+    - [x] Transmissão direta em 1 pacote no canal BULK (`MsgData`) para transações, eliminando handshakes de 3 etapas. [CONCLUÍDO - 11/08/2026]
+- [x] **Guias Operacionais, DNS Local & Telemetria `/metrics` (Sprint 9.8):**
+    - [x] `peers.json`: Registro local de resolução de nomes lógicos (`ENDEREÇO:PORTA` $\to$ `ENDEREÇO@IP:PORTA`). [CONCLUÍDO - 14/08/2026]
+    - [x] Métricas Prometheus em `/metrics` (`effective_tps`, `block_time_ms`, `db_commit_micros`, `async_worker_queue_length`, tráfego DTS). [CONCLUÍDO - 13/08/2026]
+    - [x] Documentação oficial: [`CONFIG.md`](file:///c:/Magno/Projetos/jamii/CONFIG.md), [`GENESIS.md`](file:///c:/Magno/Projetos/jamii/GENESIS.md) e [`docs/DOCUMENTACAO_TECNICA.md`](file:///c:/Magno/Projetos/jamii/docs/DOCUMENTACAO_TECNICA.md). [CONCLUÍDO - 14/08/2026]
 
 ---
 
-## 🛡️ Fase 10: Mitigação de Riscos de Consenso e Otimização de Estado (Futuras Sprints)
-*Objetivo:* Endereçar as limitações e vulnerabilidades de segurança expostas pela análise crítica do modelo de especulação, do overhead de PQC e do gargalo de execução linear da EVM.
+## 🛡️ Fase 10: Mitigação de Riscos de Consenso, Governança e Mainnet Readiness (EM CURSO)
 
-### 🆕 Sprint 10.1: Resiliência de Especulação em Round Changes (Anti-Nonce Drift)
-- [x] **Desativação Permanente da Especulação Paralela:** Remoção do gatilho assíncrono (Chained State Oracle) devido a condições de corrida no disco/RAM. O Proposer agora monta novos blocos síncrona e deterministicamente. [CONCLUÍDO - 10/07/2026]
-- [x] **Estabilização de Heap na MemPool:** Promoção offline de transações e inicialização linear dos heaps no reset pós-bloco para erradicar crashes de `index out of range`. [CONCLUÍDO - 10/07/2026]
-- [ ] **Prevenção de Proposta Inválida:** Garantir que o Proposer nunca envie uma proposta baseada em estado especulativo defasado por mudança de round, forçando regeneração imediata em cima do estado estável do round atual.
-- *Razão:* Evita propostas inválidas em cascata causadas por nonces/saldos inconsistentes quando a rede perde sincronia temporária.
-
-### 🆕 Sprint 10.2: Mitigação de Storage Bloat e Sincronismo Stateless PQC
-- [ ] **Soberania Stateless (Pruning de Assinaturas):** Pesquisar e implementar descarte de assinaturas PQC pesadas (~3.3KB por TX) de blocos antigos em nós validadores comuns após a finalização e checkpoint do estado.
-- [ ] **Isolamento de Histórico:** Manter a guarda do histórico completo de assinaturas brutas exclusivamente nos nós Archiver (armazenadores de torrent), reduzindo o custo de I/O e espaço de disco de nós normais.
-- *Razão:* Evita o crescimento insustentável do banco de dados (storage bloat) devido ao tamanho das assinaturas pós-quânticas.
-
-### 🆕 Sprint 10.3: Blindagem Matemática de Witness (Anti-State Drift)
-- [ ] **Equivalência Estrita de Sandbox:** Garantir que a validação otimista baseada em Proposer Witness na RAM execute sob regras matemáticas 100% idênticas ao motor de persistência em disco.
-- [ ] **Tratamento de Divergência Falsa:** Substituir a pânico imediata do nó por uma rejeição graciosa e isolamento do proposer se a consolidação física divergir do resultado da Witness otimista.
-- *Razão:* Protege a rede contra ataques DoS onde proposers maliciosos enviam witnesses falsas que passam na RAM mas travam/brickam todos os validadores honestos no commit de disco.
-
-### 🆕 Sprint 10.4: Execução Paralela Concorrente na EVM (Multi-threaded VM)
-- [ ] **Módulo de Paralelismo de Transações (Block-STM):** Desenvolver um classificador que identifique transações não conflitantes no bloco (que tocam em contas e armazenamento distintos).
-- [ ] **Execução Concorrente na VM:** Executar transações sem conflitos em threads paralelas de EVM, removendo o gargalo de thread única antes de enviar o batch para a Trie (SMT/Verkle).
-- *Razão:* Garante que o paralelismo de computação da Trie da Jamii traga ganho real de TPS mesmo para blocos com transações complexas de smart contracts.
-
-### 🆕 Sprint 10.5: Descentralização e Governança de Validadores (On-Chain Multisig/Voting)
-- [x] **Módulo de Votação On-Chain:** Desenvolver e testar um contrato inteligente de votação onde os validadores ativos possam propor e votar na entrada de novos validadores ou na remoção de membros existentes.
-- [x] **Transferência de Propriedade (Ownership Transfer):** Migrar a propriedade (`owner`) do `ValidatorRegistry` do endereço do Nó 01 para o endereço do contrato de votação ou carteira Multisig do consórcio de operadores.
-- *Razão:* Elimina o ponto único de falha e de controle concentrado na chave privada do Nó 01, garantindo uma governança de consenso verdadeiramente distribuída.
-
-### 🆕 Sprint 10.6: Distribuição de Taxas e Recompensa de Validadores (Proposer Fee Reward & Block Reward)
-- [ ] **Redirecionamento de Taxas (Tip Redirect):** Atualizar o `StateProcessor` para creditar a taxa de prioridade (gorjeta da transação) diretamente na conta do propositor do bloco (`coinbase`), permitindo que validadores acumulem fundos para governança de forma sustentável.
-- [ ] **Recompensa de Bloco Configurável (Block Reward Minting):** Adicionar suporte a um valor de recompensa estática de bloco configurável via `genesis.json`. O nó criará e creditará esses novos tokens ao propositor em cada altura de bloco.
-- *Razão:* Garante a sustentabilidade financeira dos validadores e viabiliza a regra de custeio de governança on-chain de forma descentralizada.
-
-### 🆕 Sprint 10.7: Detecção de Fraude e Punição de Validadores (Slashing & Jailing)
-- [ ] **Detector de Assinatura Dupla (Double-Signing Detector):** Implementar monitoramento ativo no consenso para interceptar se um mesmo validador assinou propostas ou commits conflitantes na mesma altura de bloco e rodada.
-- [ ] **Expulsão e Slashing de Tokens:** Criar o fluxo automatizado onde nós honestos que detectem provas de comportamento bizantino enviem transações de governança para ejetar o validador infrator. Opcionalmente, punir financeiramente queimando ou confiscando parte de seus tokens garantidores.
-- [ ] **Suspensão Temporária (Jailing):** Implementar lógica para desativar temporariamente o direito de voto e de participação em rounds para nós inativos (offline por mais de $X$ blocos consecutivos), forçando a recuperação técnica antes do retorno.
-- *Razão:* Protege a rede contra ataques de negação de serviço, conluios maliciosos de validadores que tentem causar forks na cadeia, e degradação do consenso por inatividade.
+- [x] **Desativação Permanente da Especulação Paralela (Sprint 10.1):** Remoção da especulação assíncrona para eliminar corridas de I/O no PebbleDB e concorrência na RAM. Montagem de blocos estritamente síncrona e determinística. [CONCLUÍDO - 10/07/2026]
+- [x] **Purga Autônoma de MemPool & Hot Nonces (Sprint 10.2):**
+    - [x] `RemoveInvalidTx`: Purga imediata por Hash e Purga Descendente de dependentes. [CONCLUÍDO - 30/07/2026]
+    - [x] Varredura autônoma em `hotNonces` no `Reset` da MemPool para evitar travamento de nonces em carteiras ativas. [CONCLUÍDO - 30/07/2026]
+- [x] **RPC Sync Guard (Sprint 10.3):** Proteção de endpoints RPC rejeitando requisições de escrita em nós em fase de sincronismo (`Node in sync mode, retry later`). [CONCLUÍDO - 30/07/2026]
+- [x] **On-Chain Validator Registry & Governança (Sprint 10.4):** Contrato pré-compilado de validadores no endereço `0x00...00fffffffd` alocado on-chain. [CONCLUÍDO - 05/06/2026]
+- [ ] **Execução Paralela Concorrente na EVM (Sprint 10.5 - Multi-threaded Block-STM):** Classificador de transações sem conflitos para execução paralela em múltiplas goroutines de EVM antes do commit da Trie.
+- [ ] **Redirecionamento de Taxas & Recompensa de Bloco (Sprint 10.6):** Redirecionamento da gorjeta da transação (`Tip`) para o `coinbase` do propositor e suporte a `BlockReward` minting via `genesis.json`.
+- [ ] **Detecção de Fraude e Punição de Validadores (Sprint 10.7 - Slashing & Jailing):** Monitoramento de assinatura dupla (Double-Signing), ejecção automatizada de nós bizantinos e suspensão temporária por inatividade.
 
 ---
 
 ## 🛠️ Checklist de Transição para Produção (Tuning & Safety)
-Esta seção detalha os ajustes obrigatórios ao sair do ambiente de testes (2 nós) para a rede real:
 
-1.  **Quórum e Segurança BFT ($3f + 1$):**
-    *   **Mandato:** Mínimo de 4 validadores para tolerar 1 nó bizantino/falho.
-    *   **Configuração:** Reversão de qualquer "flexibilização" de quórum feita em testes. A fórmula `(2n + 2) / 3` deve ser absoluta.
-
-2.  **Calibração de Timeouts (`BaseTimeout`):**
-    *   **Ajuste:** Avaliar a latência geográfica da rede. Recomenda-se aumentar `BaseTimeout` de 2s para 5s-10s em redes globais para reduzir `Round Changes` espúrios.
-
-3.  **Governança de Limites de Bloco:**
-    *   **Mandato:** O limite de transações por bloco é configurado estritamente via `MaxTxsPerBlock` na Gênese. Esta abordagem garante previsibilidade total do throughput e simplifica a orquestração do DTS.
-
-4.  **Pruning e Disponibilidade de Dados:**
-    *   **Retenção:** Aumentar a janela de `Prune` do consenso para manter as últimas 100~500 alturas, facilitando o sincronismo de nós com micro-quedas.
-
-5.  **Política Anti-Spam da MemPool:**
-    *   **MinPrice:** Calibrar o `MinPrice` e o `PriceBump` (RBF) conforme o valor econômico da rede para evitar ataques de inundação.
-
-6.  **Gestão de Validadores (Cartório Dinâmico):**
-    *   **Evolução:** Mover o Cartório de Identidades para dentro do **StateDB (On-Chain Identity)**. Chaves públicas PQC devem ser registradas na Verkle Tree para permitir a recuperação determinística do histórico sem dependência de cache local (`identities.json`).
-    *   **Governança:** Migrar da lista estática no Gênesis para um mecanismo de votação On-Chain ou contrato de Staking.
-
----
-
-## 🧭 Diretrizes de Evolução (Mandatos)
+1. **Quórum e Segurança BFT ($3F + 1$):** Mínimo de 4 validadores em produção para tolerar 1 nó bizantino.
+2. **Calibração de Timeouts:** Ajuste do `BaseTimeout` de acordo com a latência geográfica da rede (padrão 2s a 5s).
+3. **Poda em Disco e Retenção:** Janela de `prune_retain_blocks` ajustada para 1.024 blocos em nós validadores de produção e 50.000 em redes de teste.
+4. **Política Anti-Spam da MemPool:** Validação de `MinPrice` e rejeição de transações gigantes antes de verificações quânticas.
+5. **Nós de Arquivo Dedicados (`Archiver`):** Alocação de nós com `is_archive_node: true` e `prune_enabled: false` para garantir preservação histórica e servir de fonte de sincronismo.
 
 ---
 
 ## 🔴 Production Blocking Debt (Pendências Críticas)
-Estas tarefas são consideradas bloqueantes para o lançamento da Mainnet. Sem elas, a rede opera apenas em modo de "Federação Fechada".
 
-1.  **On-Chain Validator Registry (Sovereign Governance):**
-    *   **Status:** [x] Concluído.
-    *   **Definição:** Mover as chaves públicas PQC de validadores para a **Verkle Tree** via contrato inteligente de registro on-chain pré-alocado na gênese.
-    *   **Impacto:** Permite a governança descentralizada (votação para novos validadores) e rotatividade de chaves sem necessidade de Hard Forks, integrando chamadas EVM dinâmicas no consenso.
-
-2.  **Torrent Snap Sync (High-Speed Onboarding):**
-    *   **Status:** Motor validado, Integração pendente.
-    *   **Definição:** Utilizar o motor BitTorrent (Fase 8) para distribuir snapshots binários da Verkle Tree.
-    *   **Impacto:** Permite que novos nós entrem na rede instantaneamente, baixando apenas o estado atual em vez de reprocessar milhões de blocos históricos.
-
-3.  **Real-Time Event Streaming (WebSocket RPC):**
-    *   **Status:** Pendente.
-    *   **Definição:** Implementar suporte a WebSockets no módulo `pkg/rpc` para o método `eth_subscribe`.
-    *   **Impacto:** Indispensável para carteiras (MetaMask) e dApps receberem notificações de eventos de contratos e confirmações de TX em tempo real.
-
-4.  **Verkle Gas Repricing (EIP-4762 Compliance):**
-    *   **Status:** Pendente.
-    *   **Definição:** Ajustar a tabela de custos de gás (`GasCalculator`) para refletir o custo computacional real das provas Verkle/IPA, conforme a proposta oficial da Ethereum Foundation.
-    *   **Impacto:** Protege a rede contra ataques de exaustão de CPU (DoS) que exploram a complexidade matemática da curva Bandersnatch em comparação aos hashes tradicionais.
-
-5.  **Formal Verification (Core Audit):**
+1. **On-Chain Validator Registry (Sovereign Governance):** [x] **CONCLUÍDO** (Pré-compilado `0x00...00fffffffd`).
+2. **Torrent Snap Sync (High-Speed Onboarding):** Motor BitTorrent validado e funcional no Data Plane.
+3. **Real-Time Event Streaming (WebSocket RPC):** Suporte a `eth_subscribe` via WebSockets para dApps (Pendente).
+4. **Verkle Gas Repricing (EIP-4762 Compliance):** Ajuste de tabela de gas para provas Verkle/IPA (Pendente).
+5. **Multi-threaded Block-STM Execution:** Paralelização de transações EVM sem conflito (Pendente).
 
 ---
 
 ## 🧭 Diretrizes de Evolução (Mandatos)
 
-1. **Besu/Geth como Norte:** Sempre consultar a lógica dessas implementações antes de propor mudanças arquiteturais.
-2. **Desempenho PQC:** O custo computacional do ML-DSA não deve ser subestimado. O paralelismo é a regra.
-3. **Imutabilidade de Finalidade:** O IBFT 2.0 garante finalidade imediata. O código deve impedir qualquer tentativa de reorg em nível de motor.
-5. **Soberania de Logs:** A saúde do nó deve ser visível sem necessidade de ferramentas externas; o log industrial é a primeira linha de defesa.
-6. **Manifesto Pétreo (Stony Config):** Parâmetros de rede definidos na gênese (ChainID, FreeGas, etc.) são imutáveis e protegidos pelo banco de dados; a tentativa de rodar um node com configurações divergentes do banco deve abortar a execução imediatamente.
-7. **Sincronismo de Segurança (Sync-to-Consensus):** Um nó validador nunca deve enviar votos de consenso (Prepare/Commit) enquanto sua altura local estiver atrasada em relação à rede. O nó deve atuar como "Observador" até que o sincronismo total seja atingido, com exceção do nó de Bootstrap ou em modo Solo.
+1. **Besu/Geth como Norte:** Sempre consultar a lógica dessas implementações oficiais antes de propor mudanças arquiteturais.
+2. **Desempenho PQC:** O custo computacional do ML-DSA-65 não deve ser subestimado. Paralelismo e esqueletos de bloco bi-polares são a regra.
+3. **Imutabilidade de Finalidade:** O IBFT 2.0 garante finalidade imediata no bloco finalizado. Reorganizações de cadeia (*reorgs*) são estritamente proibidas.
+4. **Manifesto Pétreo (Stony Config):** Parâmetros de rede definidos no `genesis.json` (`ChainID`, `IsFreeGas`, `TreeType`) são imutáveis e protegidos pelo banco de dados (`meta:chain`).
+5. **Sincronismo de Segurança (Sync-to-Consensus):** Um nó validador nunca envia votos de consenso (Prepare/Commit) enquanto sua altura local estiver atrasada em relação à rede (`SyncManager.IsBehind() == true`).
