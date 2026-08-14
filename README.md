@@ -58,6 +58,7 @@ O Jamii é regido por uma arquitetura rigorosa e documentada. Consulte os pilare
 *   🏁 **[Plano Geral do Projeto](docs/PLANO_GERAL_PROJETO.md):** Roadmap e marcos de evolução.
 *   ⚡ **[Otimizações Jamii Turbo](docs/jamii_turbo_optimization.md):** Detalhes sobre a arquitetura Zero-Alloc/Zero-Copy.
 *   ⚙️ **[Configuração](CONFIG.md):** Parâmetros do arquivo config.yaml e peers.json.
+*   ⚙️ **[Arquivo de Gênesis](GENESIS.md):** Configuração do Gênesis.
 
 ### Resultados da Auditoria (Abril/2026):
 *   ✅ **Consenso de Estado (Verkle/SMT):** Estado convergente garantido via Trie Factory e indexação determinística.
