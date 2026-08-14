@@ -86,6 +86,60 @@ torrent_peers:
 
 ---
 
+## 🗺️ Registro Local de Resolução de Nomes (`peers.json`)
+
+O arquivo `peers.json` atua como um **DNS Local / Tabela de Resolução de Nomes** para a Jamii Blockchain. Ele permite simplificar a declaração de vizinhos em ambientes de implantação, traduzindo o **Endereço Soberano Jamii (`jamii1...`)** para o seu respectivo endereço de IP ou Hostname.
+
+### 1. Formato do Arquivo (`peers.json`)
+
+O formato do arquivo é um objeto JSON (`map[string]string`) simples, mapeando cada Endereço Soberano ao seu IP/Host na rede:
+
+```json
+{
+  "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v": "172.22.1.49",
+  "jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74": "172.22.1.49",
+  "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05": "172.22.1.48",
+  "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5": "node1.jamii.network"
+}
+```
+
+* **Chave**: Endereço Soberano Jamii no formato Bech32 (`jamii1...`).
+* **Valor**: Endereço IP (`"172.22.1.49"`, `"127.0.0.1"`) ou Host/FQDN (`"node1.jamii.network"`).
+
+### 2. Funcionamento e Resolução Automática (`ResolvePeers`)
+
+Quando o nó é inicializado, a função de resolução ([`ResolvePeers` em `pkg/node/config.go`](file:///c:/Magno/Projetos/jamii/pkg/node/config.go#L131)) analisa as listas `static_peers` e `torrent_peers` no `config.yaml`:
+
+1. **Declaração Sem `@`**: Se um item da lista for definido apenas como `ENDEREÇO_SOBERANO:PORTA` (sem o IP e o caractere `@`), o nó identifica que é uma referência lógica que necessita de resolução.
+2. **Consulta ao `peers.json`**: O nó busca o Endereço Soberano no arquivo `peers.json` para obter o IP/Host correspondente.
+3. **Expansão Dinâmica**: O nó constrói o formato soberano completo `ENDEREÇO_SOBERANO@IP:PORTA`.
+
+#### Exemplo Prático:
+
+No `config.yaml`:
+```yaml
+static_peers:
+  - "jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74:30304"
+```
+
+Se o `peers.json` contiver `"jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74": "172.22.1.49"`, o nó expandirá automaticamente em memória para:
+```
+jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74@172.22.1.49:30304
+```
+
+### 3. Localização e Ordem de Precedência
+
+O nó procura o arquivo `peers.json` seguindo a seguinte ordem de prioridade:
+
+1. **Parâmetro CLI / Config**: Caminho especificado pela flag `--peers` na linha de comando ou pelo campo `peers_file` no `config.yaml`.
+2. **Diretório de Dados (`data_dir`)**: Arquivo `<data_dir>/peers.json` (se `data_dir` for diferente de `./`).
+3. **Diretório Local (Fallback)**: Arquivo `./peers.json` no diretório raiz de execução do processo.
+
+> [!NOTE]
+> Se todas as entradas em `static_peers` e `torrent_peers` já contiverem o formato soberano completo com o `@` (`ENDEREÇO@IP:PORTA`), a leitura do `peers.json` é ignorada.
+
+---
+
 ## ⚡ Exemplos Práticos de Arquivos `config.yaml`
 
 ### Exemplo 1: Validador Padrão (`n1/config.yaml`)
