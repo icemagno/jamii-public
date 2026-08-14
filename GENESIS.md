@@ -51,7 +51,6 @@ A seção `config` especifica os parâmetros operacionais imutáveis que regem a
   "maxTxsPerBlock": 900,
   "maxMempoolSlotSize": 15000,
   "maxMempoolMemorySize": 536870912,
-  "maxTxBatchSize": 50,
   "validatorContract": "0x00000000000000000000000000000000fffffffd"
 }
 ```
@@ -68,7 +67,6 @@ A seção `config` especifica os parâmetros operacionais imutáveis que regem a
 | `maxTxsPerBlock` | `integer` | `1000` | Limite máximo de transações que o líder pode incluir em um único bloco. |
 | `maxMempoolSlotSize` | `integer` | `10000` | Quantidade máxima de transações mantidas simultaneamente na MemPool. |
 | `maxMempoolMemorySize` | `integer` | `536870912` | Limite máximo de memória física (RAM) alocada para a MemPool em bytes (ex: 512 MB = `536870912`). |
-| `maxTxBatchSize` | `integer` | `50` | Quantidade máxima de transações empacotadas por lote durante a propagação P2P. |
 | `validatorContract` | `string` | *opcional* | Endereço pré-compilado soberano do contrato de registro de validadores on-chain. |
 | `treasury` | `string` | *opcional* | Endereço do cofre de tesouraria para retenção de penalidades de *slashing*. |
 
@@ -175,7 +173,6 @@ Abaixo está um exemplo completo e funcional de um arquivo `genesis.json` config
     "maxTxsPerBlock": 900,
     "maxMempoolSlotSize": 15000,
     "maxMempoolMemorySize": 536870912,
-    "maxTxBatchSize": 50,
     "validatorContract": "0x00000000000000000000000000000000fffffffd"
   },
   "initialBaseFee": "1000000000",
