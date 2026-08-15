@@ -161,6 +161,10 @@ Este documento define o planejamento estratégico de longo prazo para a constru�
 - [ ] **Redirecionamento de Taxas & Recompensa de Bloco (Sprint 10.6):** Redirecionamento da gorjeta da transação (`Tip`) para o `coinbase` do propositor e suporte a `BlockReward` minting via `genesis.json`.
 - [ ] **Detecção de Fraude e Punição de Validadores (Sprint 10.7 - Slashing & Jailing):** Monitoramento de assinatura dupla (Double-Signing), ejecção automatizada de nós bizantinos e suspensão temporária por inatividade.
 - [ ] **Criptografia PQC de Canal P2P (Sprint 10.8 - ML-KEM-768 / Kyber):** Implementação de Key Encapsulation Mechanism (NIST FIPS 203) no *handshake* do motor DTS (`pkg/dts`) com derivação HKDF e cifragem simétrica de pacotes TCP (AES-256-GCM), garantindo confidencialidade *End-to-End* quântica contra ataques *Harvest Now, Decrypt Later*.
+- [ ] **Cadeia de Entropia Soberana, Padrão 256-bit & Integração QRNG (Sprint 10.9 - CPQD / Dobslit):**
+    - [x] **Especificação de Entropia & Derivação:** Documento oficial [`ENTROPY_SPEC.md`](file:///c:/Magno/Projetos/jamii/docs/ENTROPY_SPEC.md) formalizando o Orçamento de Entropia ($\mathcal{H}(f(X)) \le \mathcal{H}(X)$), rastreabilidade CSPRNG/DRBG e higienização física de memória RAM (`Wipe()`). [CONCLUÍDO - 15/08/2026]
+    - [ ] **Obrigatoriedade de Entropia 256-bit para Validadores:** Atualização da CLI e SDK de carteira para forçar mnemônicos BIP-39 de 24 palavras (256 bits de entropia pura) em contas de validadores e identidades soberanas institucionais.
+    - [ ] **Integração com Testbed QRNG (CPQD / Dobslit):** Conector via PKCS#11 / REST para geradores de aleatoriedade quântica no *Entropy Aggregator* (`HKDF-Extract`) para inicialização de validadores e disponibilização de *Entropy-as-a-Service (EaaS)* em smart contracts soberanos.
 
 ---
 
