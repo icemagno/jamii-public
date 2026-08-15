@@ -160,12 +160,13 @@ Este documento define o planejamento estratégico de longo prazo para a constru�
 - [ ] **Execução Paralela Concorrente na EVM (Sprint 10.5 - Multi-threaded Block-STM):** Classificador de transações sem conflitos para execução paralela em múltiplas goroutines de EVM antes do commit da Trie.
 - [ ] **Redirecionamento de Taxas & Recompensa de Bloco (Sprint 10.6):** Redirecionamento da gorjeta da transação (`Tip`) para o `coinbase` do propositor e suporte a `BlockReward` minting via `genesis.json`.
 - [ ] **Detecção de Fraude e Punição de Validadores (Sprint 10.7 - Slashing & Jailing):** Monitoramento de assinatura dupla (Double-Signing), ejecção automatizada de nós bizantinos e suspensão temporária por inatividade.
+- [ ] **Criptografia PQC de Canal P2P (Sprint 10.8 - ML-KEM-768 / Kyber):** Implementação de Key Encapsulation Mechanism (NIST FIPS 203) no *handshake* do motor DTS (`pkg/dts`) com derivação HKDF e cifragem simétrica de pacotes TCP (AES-256-GCM), garantindo confidencialidade *End-to-End* quântica contra ataques *Harvest Now, Decrypt Later*.
 
 ---
 
 ## 🛠️ Checklist de Transição para Produção (Tuning & Safety)
 
-1. **Quórum e Segurança BFT ($3F + 1$):** Mínimo de 4 validadores em produção para tolerar 1 nó bizantino.
+1. **Topologia de Produção (Recomendação DevOps - Mínimo 4 Validadores):** Na implantação de redes de produção (Mainnet), recomenda-se cadastrar no mínimo 4 validadores no `genesis.json` para tolerar a queda de 1 servidor ($F=1$), mantendo o quórum operacional de 3 nós online ($Q = 2F+1 = 3$). Em ambiente de desenvolvimento local, a rede pode operar com 3 validadores cadastrados (quórum 2).
 2. **Calibração de Timeouts:** Ajuste do `BaseTimeout` de acordo com a latência geográfica da rede (padrão 2s a 5s).
 3. **Poda em Disco e Retenção:** Janela de `prune_retain_blocks` ajustada para 1.024 blocos em nós validadores de produção e 50.000 em redes de teste.
 4. **Política Anti-Spam da MemPool:** Validação de `MinPrice` e rejeição de transações gigantes antes de verificações quânticas.
