@@ -2,9 +2,7 @@
 
 **Projeto:** Jamii Blockchain  
 **Status:** Homologado / Especificação Oficial  
-**Versão:** 1.0.0  
-**Autor:** Engenharia de Criptografia Jamii  
-**Revisores:** Diretoria de Criptografia & CASNAV (Centro de Análises de Sistemas Navais)  
+**Versão:** 1.0.0   
 
 ---
 
