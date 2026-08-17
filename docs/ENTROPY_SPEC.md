@@ -1,12 +1,11 @@
-# 🛡️ JAMII Blockchain - Especificação de Entropia e Derivação de Chaves (ENTROPY_SPEC)
+# 🛡️ Especificação de Entropia e Derivação de Chaves
 
 **Projeto:** Jamii Blockchain  
 **Status:** Homologado / Especificação Oficial  
 **Versão:** 1.0.0  
-**Autor:** Engenharia de Criptografia Jamii  
-**Revisores:** Diretoria de Criptografia & CASNAV (Centro de Análises de Sistemas Navais)  
 
----
+<img width="985" height="485" alt="arquitetura-entropia" src="https://github.com/user-attachments/assets/f77937de-a838-4598-a49c-467c94c7b2aa" />
+
 
 ## 📋 1. Visão Geral
 
