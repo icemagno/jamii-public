@@ -2,7 +2,9 @@
 
 **Projeto:** Jamii Blockchain  
 **Status:** Homologado / Especificação Oficial  
-**Versão:** 1.0.0   
+**Versão:** 1.0.0  
+**Autor:** Engenharia de Criptografia Jamii  
+**Revisores:** Diretoria de Criptografia & CASNAV (Centro de Análises de Sistemas Navais)  
 
 ---
 
@@ -291,4 +293,3 @@ Esta seção fornece a análise de impacto técnico detalhada, estimativa de com
 │ ➔ Injeção de semente no Header + Registro de Precompile 0x...fffffffc     │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
-
