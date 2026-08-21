@@ -10,7 +10,7 @@ static_peers:
   - "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5:30306"
   - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:30307"
   - "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a:30310"  
-log_level: "debug"
+log_level: "info"
 genesis_file: "./genesis.json"
 torrent_peers:
   - "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v:42090"
@@ -18,3 +18,9 @@ torrent_peers:
   - "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5:42093"
   - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:42094"
   - "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a:42020"  
+sync_from: "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a"
+stateless: false
+is_archive_node: false
+prune_enabled: true
+prune_retain_blocks: 1024
+prune_batch_size: 256

@@ -1,6 +1,6 @@
 data_dir: "./datadir"
 node_key_file: "./nodekey"
-miner_enabled: true
+miner_enabled: false
 rpc_port: 8556
 p2p_port: 30310
 torrent_port: 42020
@@ -12,10 +12,12 @@ static_peers:
   - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:30307"
 log_level: "debug"
 genesis_file: "./genesis.json"
-pg_conn_str: "postgres://myuser:mypassword@192.168.1.47:36432/jamii?sslmode=disable"
+pg_conn_str: "postgres://postgres:admin@172.22.1.47:36432/jamii?sslmode=disable"
 torrent_peers:
   - "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v:42000"
   - "jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74:42001"
   - "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05:42002"
   - "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5:42003"
   - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:42004"
+is_archive_node: true
+prune_enabled: false

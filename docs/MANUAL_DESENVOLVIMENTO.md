@@ -87,3 +87,37 @@ A evolução do projeto exige a unificação dos módulos em um orquestrador cen
 *   **CLI First:** Utilizamos `spf13/cobra` para gerenciar comandos.
 *   **Miner Control:** A flag `--miner-enabled` deve controlar se o nó participa ativamente da produção de blocos ou atua como um observador passivo.
 *   **Identity Management:** O nó deve ler sua identidade soberana de um keystore seguro, utilizando as funções do módulo `CRYPTO`.
+
+---
+
+## 7. Guia Oficial de Opções de Configuração
+
+### 7.1 Configuração Operacional do Nó (`config.yaml`)
+
+| Opção | Tipo | Padrão | Descrição |
+| :--- | :---: | :---: | :--- |
+| `data_dir` | `string` | `"./data"` | Diretório base para o armazenamento de dados (PebbleDB) e identidade do nó. |
+| `node_key_file` | `string` | `"./nodekey"` | Arquivo de chave privada do nó. |
+| `node_key_algo` | `string` | `"MLDSA65"` | Algoritmo PQC da chave privada do nó (`"MLDSA65"`, `"Falcon512"`, `"Secp256k1"`). |
+| `miner_enabled` | `boolean` | `true` | Habilita a participação ativa do nó no consenso IBFT 2.0. |
+| `rpc_port` | `integer` | `8545` | Porta HTTP/TCP para o servidor JSON-RPC 2.0. |
+| `p2p_port` | `integer` | `30303` | Porta TCP para o protocolo DTS (Distributed Transaction Store). |
+| `torrent_port` | `integer` | `6881` | Porta TCP para o plano de dados BitTorrent (Data Plane). |
+| `log_level` | `string` | `"info"` | Nível de verbosidade de logs (`"trace"`, `"debug"`, `"info"`, `"warn"`, `"error"`). |
+| `genesis_file` | `string` | `"./genesis.json"` | Caminho para a especificação do Bloco Gênese. |
+| `static_peers` | `array` | `[]` | Lista de pares confiáveis (`"ENDEREÇO_SOBERANO@host:port"`). |
+| `stateless` | `boolean` | `false` | Habilita o modo 100% Stateless (armazenamento em memória RAM). |
+| `is_archive_node` | `boolean` | `false` | Habilita o nó arquivador de histórico em disco. |
+| `prune_enabled` | `boolean` | `false` | Habilita a poda automática de estado em disco no PebbleDB. |
+
+### 7.2 Configuração da Identidade da Rede (`genesis.json` -> `config`)
+
+| Opção | Tipo | Padrão | Descrição |
+| :--- | :---: | :---: | :--- |
+| `chainId` | `string` | `"2026"` | Identificador numérico da blockchain (Chain ID). |
+| `defaultQuantumAlgo` | `string` | `"MLDSA65"` | Algoritmo PQC padrão da rede no Bloco #0 (`"MLDSA65"`, `"Falcon512"`). |
+| `isFreeGas` | `boolean` | `false` | Desabilita a cobrança de gas por execução de transações. |
+| `treeType` | `integer` | `2` | Estrutura de dados da trie de estado (`1`: SMT, `2`: Verkle Tree). |
+| `blockPeriod` | `integer` | `2` | Cadência temporal mínima em segundos entre blocos do consenso. |
+| `requestTimeout` | `integer` | `10` | Timeout em segundos para disparar o Round Change no IBFT. |
+| `maxTxsPerBlock` | `integer` | `2000` | Limite máximo de transações em cada bloco. |

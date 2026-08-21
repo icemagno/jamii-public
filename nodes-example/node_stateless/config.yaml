@@ -1,26 +1,23 @@
 data_dir: "./"
 node_key_file: "./nodekey"
-miner_enabled: true
-rpc_port: 8548
-p2p_port: 30306
-torrent_port: 42093
+miner_enabled: false
+rpc_port: 8599
+p2p_port: 30399
+torrent_port: 42099
 static_peers:
   - "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v:30303"
   - "jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74:30304"
   - "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05:30305"
+  - "jamii1zauyf30zefjl6ejwjpu57cwl7en35tl69c3gmz5:30306"
   - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:30307"
-  - "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a:30310"  
+  - "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a:30310"
 log_level: "info"
 genesis_file: "./genesis.json"
 torrent_peers:
-  - "jamii1z7fsyg98ejec8vhg7mdyruus0v676jd5ryxa62v:42090"
-  - "jamii1zvn6k33jjwlkup7acutrkf4hppms3pcwk8syw74:42091"
-  - "jamii1z6nunrx9j26fqzsusrqsj2dqts2z87qf66nzp05:42092"
-  - "jamii1zhd0x8lwzp8pq82fr4t3hrtj09r53r9hegptrh0:42094"
   - "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a:42020"
 sync_from: "jamii1zm9599n3yng9yy72p538t87ctq27jd4jdnmhx2a"
-stateless: false
+stateless: true
 is_archive_node: false
-prune_enabled: true
+prune_enabled: false
 prune_retain_blocks: 1024
 prune_batch_size: 256

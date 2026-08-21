@@ -43,9 +43,9 @@
 
 A **Jamii Blockchain** foi projetada para ser a infraestrutura de camada 1 soberana de alta vazão para a era pós-quântica. O projeto combina compatibilidade industrial com o ecossistema EVM (Ethereum Virtual Machine) e inovações de engenharia em tempo de execução nativo Go.
 
-### 1.1 Criptografia Híbrida L3 (ML-DSA-65 + Secp256k1)
+### 1.1 Criptografia Híbrida L3 e Agilidade Criptográfica (*Signature Agility*)
 
-Para garantir segurança contínua contra ataques de computadores quânticos enquanto preserva o ecossistema de carteiras e ferramentas existentes, a Jamii adota um esquema de **Assinatura Híbrida Dual**:
+Para garantir segurança contínua contra ataques de computadores quânticos enquanto preserva o ecossistema de carteiras e ferramentas existentes, a Jamii adota um esquema de **Assinatura Híbrida Dual** com **Agilidade Criptográfica (*Signature Agility*)**:
 
 * **ML-DSA-65 (FIPS 204 / Dilithium Level 3)**: Algoritmo de assinatura pós-quântica baseado em reticulados (*lattices*). É utilizado para a autoridade de nós validadores no consenso IBFT 2.0, identificação P2P no protocolo DTS e assinação soberana de transações de alto nível.
 * **Secp256k1 (ECDSA)**: Algoritmo elíptico tradicional. É utilizado para a geração do par de chaves inicial e derivação determinística do hash de endereço.
@@ -53,6 +53,26 @@ Para garantir segurança contínua contra ataques de computadores quânticos enq
 No código-fonte ([`pkg/crypto/signer`](file:///c:/Magno/Projetos/jamii/pkg/crypto/signer)), a estrutura `SovereignSigner` gerencia a assinatura dupla. O payload assinado contém o compromisso com a chave pública pós-quântica e com o hash Secp256k1:
 
 $$\text{SovereignIdentity} = \text{Keccak256}(\text{PublicKey}_{\text{Secp256k1}})[12:32]$$
+
+#### Domínio de Algoritmos Criptográficos (`Algorithm uint8`)
+
+A rede utiliza um byte de prefixo autodescritivo em todas as chaves e assinaturas. O sistema suporta e prevê o seguinte domínio de algoritmos:
+
+| ID (`Algorithm`) | Nome / Esquema | Categoria | Tamanho PubKey | Tamanho Assinatura | Status no Projeto | Descrição / Uso |
+| :---: | :--- | :---: | :---: | :---: | :---: | :--- |
+| `0x00` | **Secp256k1** | Tradicional | 33 / 65 bytes | 64/65 bytes | **Homologado** | Compatibilidade ECDSA / Ethereum. |
+| `0x01` | **MLDSA65** | PQC Puro | 1.953 bytes | 3.309 bytes | **Homologado** | NIST FIPS 204 (Dilithium L3). |
+| `0x02` | **Hybrid-MLDSA** | Híbrido | 1.991 bytes | 3.377 bytes | **Homologado** | Dual Security (Secp256k1 + ML-DSA-65). |
+| `0x03` | **Falcon512** | PQC Puro | 898 bytes | 666 bytes | *Planejado* | NIST FIPS Round 4 (NTRU Lattice). Ultracompacto. |
+| `0x04` | **SLHDSA128f** | PQC Puro | 33 bytes | ~7.856 bytes | *Planejado* | NIST FIPS 205 (SPHINCS+ Stateless Hash). Zero lattices. |
+| `0x05` | **Hybrid-Falcon** | Híbrido | ~935 bytes | ~734 bytes | *Planejado* | Dual Security ultracompacto (Secp256k1 + Falcon-512). |
+| `0x06` | **Hybrid-SLHDSA** | Híbrido | ~70 bytes | ~7.924 bytes | *Planejado* | Dual Security estateless conservador. |
+
+#### Seleção de Algoritmo via Genesis e APIs do Código
+
+O criador da rede pode especificar o algoritmo padrão no `genesis.json` via parâmetro `"defaultQuantumAlgo": "MLDSA65"`. As APIs internas do nó e do SDK suportam a geração parametrizada:
+- **Nó Go (`pkg/node/identity.go`):** `node.LoadOrCreateNodeKeyWithAlgo(dataDir, keyFileName, algo)`
+- **Carteira/SDK (`pkg/wallet/wallet.go`):** `wallet.FromMnemonicWithAlgo(mnemonic, password, algo)`
 
 ### 1.2 Identidade Unificada Shadowless
 

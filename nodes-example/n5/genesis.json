@@ -3,9 +3,9 @@
     "chainId": "2026",
     "isFreeGas": false,
     "treeType": 2,
-    "blockPeriod": 7,
-    "requestTimeout": 20,
-    "maxTxsPerBlock": 1000,
+    "blockPeriod": 5,
+    "requestTimeout": 15,
+    "maxTxsPerBlock": 900,
     "maxMempoolSlotSize": 15000,
     "maxMempoolMemorySize": 536870912,
     "validatorContract": "0x00000000000000000000000000000000fffffffd"

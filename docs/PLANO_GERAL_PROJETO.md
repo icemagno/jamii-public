@@ -185,6 +185,8 @@ Este documento define o planejamento estratégico de longo prazo para a constru�
 3. **Real-Time Event Streaming (WebSocket RPC):** Suporte a `eth_subscribe` via WebSockets para dApps (Pendente).
 4. **Verkle Gas Repricing (EIP-4762 Compliance):** Ajuste de tabela de gas para provas Verkle/IPA (Pendente).
 5. **Multi-threaded Block-STM Execution:** Paralelização de transações EVM sem conflito (Pendente).
+6. **Rotação Autenticada de Chaves no Cartório (`signer.GetRegistry().ForceUpdate`):** Implementar o método `ForceUpdate()` em `pkg/crypto/signer/registry.go` para permitir a substituição de chaves públicas de validadores no cartório de memória/disco quando instruída por transações confirmadas no contrato `ValidatorRegistry.sol` (Pendente).
+7. **Challenge-Response com Assinatura no Handshake P2P (`pkg/dts` - Prova de Posse):** Incluir a geração e verificação de um desafio aleatório (*nonce*) assinado pela `localKey` durante o aperto de mão `MsgHandshake` no motor DTS (`pkg/dts/engine.go`), exigindo prova de posse da chave privada antes de liberar o socket TCP (Pendente).
 
 ---
 
