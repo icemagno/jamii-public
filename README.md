@@ -30,23 +30,42 @@ O núcleo fundamental do Jamii atingiu maturidade industrial, quebrando recordes
 *   **Ultra-Compact Skeleton (Bi-Polar):** Redução de **81%** no tráfego de rede. Blocos com 3.000 TXs trafegam quase sem overhead, usando identificadores de 6 bytes (3 iniciais + 3 finais), permitindo que o dado chegue antes do sinal de consenso.
 *   **DTS (Distributed Transaction Store):** Motor P2P de canal duplo (Express/Bulk). Sinais de consenso viajam por "vias rápidas" sem serem bloqueados por downloads de blocos pesados.
 
-## ⚡ Desempenho em Rede Distribuída (Julho/2026)
+## ⚡ Desempenho em Rede Distribuída (Agosto/2026)
 
-Abaixo estão os resultados reais medidos sob flood massivo simultâneo (90.000 transações divididas em 3 fluxos de 30.000 TXs) em rede física distribuída em 3 servidores de produção (5 validadores + Archiver):
+Abaixo estão os resultados reais medidos sob teste de estresse sustentado (*Soak Test*) submetido por 5 instâncias concorrentes do gerador de tráfego pós-quântico (`cmd/traffic`), mantendo 10.000 carteiras efêmeras ativas disparando transações simultâneas via JSON-RPC em rede física de produção:
 
-| Métrica de Eficiência | Vazão em Produção | Destaque Técnico |
+| Métrica de Eficiência | Vazão e Latência Apuradas | Destaque Técnico / Metodologia |
 | :--- | :--- | :--- |
-| **Throughput Médio** | **~94.8 TPS** | Vazão real sustentada sob flood de transações Dilithium (PQC Nível 3). |
-| **Pico de Vazão** | **107.0 TPS** | Máxima velocidade de escoamento e comits registrada sob flood contínuo. |
-| **Tempo de Bloco** | **3.0s a 3.1s** | **Block Pacing:** Cadência perfeitamente homogênea com `blockperiod = 3s` configurado. |
-| **Tempo de Consenso** | **< 100ms** | A votação física (Propose/Prepare/Commit) no DTS leva apenas ~100ms, restando ~2.9s de ociosidade/pacing. |
-| **Gravação PebbleDB** | **O(1) Efficiency** | **Bonsai Turbo:** Persistência determinística em tempo de milissegundos. |
-| **Reconstrução Bi-Polar** | **~95% Economia** | Reconstrução de blocos cheios localmente a partir de Short IDs (compact block skeleton). |
+| **Throughput Sustentado** | **65,6 a 82,3 TPS** | Média contínua de transações pós-quânticas seladas e finalizadas sob soak test prolongado. |
+| **Pico de Vazão (Grafana)** | **140,0 TPS** | Máxima velocidade de escoamento e comits em janelas móveis de tempo real sob surtos de bloco. |
+| **Carga de Entrada Submetida** | **500 TPS** | Pressão de entrada gerada por 10.000 carteiras PQC efêmeras operadas por 5 instâncias paralelas. |
+| **Taxa de Confirmação** | **99,985%** | Mais de 20.000 transações confirmadas com apenas 3 descartes isolados sob concorrência extrema. |
+| **Estabilidade da MemPool** | **~500 TXs** | Ponto de equilíbrio perfeito em estado estacionário (vazão de drenagem emparelhada com RPC). |
+| **Verificação Criptográfica PQC** | **500 µs a 1,0 ms** | Latência de validação de assinaturas pós-quânticas ML-DSA-65 em sub-milissegundos. |
+| **Execução na VM (EVM)** | **573 µs a 1,0 ms** | Latência de processamento de contratos e transferências na EVM em sub-milissegundos. |
+| **Commit StateDB (PebbleDB)** | **20 ms a 50 ms** | Persistência determinística em tempo de milissegundos (Arquitetura Bonsai Turbo). |
+| **Socorro Expresso (DTS EXPRESS)**| **5 ms a 18 ms** | Resgate reativo de transações faltantes em blocos compactos com injeção forçada (`AddForced`). |
+| **Estabilidade de Consenso IBFT** | **100% em Round 0 (`R:0`)** | Zero estouros de timeout de rodada ao longo de centenas de blocos consecutivos. |
 
 ### Avaliação do Comportamento da Rede:
-* **Ampla Folga Operacional:** A rede opera com extrema estabilidade. De um tempo de bloco de 3.0s, cerca de 2.9s representam tempo de pacing ocioso (o nó aguarda a expiração do timestamp mínimo do bloco anterior). O processamento de Consensus, EVM e I/O físico em disco (PebbleDB) consome apenas cerca de 100ms, demonstrando que a rede está longe do limite de saturação física.
-* **Auto-Recuperação e Resiliência (Watchdog Keep-Alive):** O Watchdog de quórum do nó transmite ativamente atualizações de status a cada 5 segundos. Em caso de oscilações de rede ou atraso de sincronização, as tabelas locais dos validadores se autoregulam em tempo real, destravando o consenso de forma imediata e transparente.
+* **Resiliência e Recuperação Reativa no Canal EXPRESS:** Em casos pontuais onde transações fofocadas no canal BULK sofrem atrasos micro-temporais, o motor de socorro expresso (`MT_EXPRESS_TX_REQ`) resgata as transações faltantes junto ao proponente em apenas 5 a 18 milissegundos. O mecanismo de injeção forçada (`AddForced`) garante a reconstrução instantânea do bloco compacto sem provocar estouros de timeout no consenso IBFT.
+* **Estabilidade de Estágio Estacionário:** A MemPool oscila de forma saudável na faixa de 500 transações pendentes, provando que a taxa de drenagem do consenso emparelhou perfeitamente com o ritmo do RPC sem vazamento de memória RAM.
 
+### 🔐 Baseline Criptográfico PQC e Tráfego de Rede DTS (ML-DSA-65 vs Falcon Target)
+
+Para fundamentar o plano futuro de **Rotação Dinâmica de Algoritmos PQC** e benchmark comparativo com o **Falcon**, foi estabelecido o baseline oficial de tráfego de rede P2P (motor DTS) e custos de payload da criptografia nativa **ML-DSA-65** (Dilithium Nível 3 NIST):
+
+| Parâmetro PQC / Rede | Valor Baseline (ML-DSA-65) | Projeção / Alvo para Rotação com **Falcon-512** | Impacto Técnico no Motor DTS |
+| :--- | :--- | :--- | :--- |
+| **Tamanho da Chave Pública** | **1.952 bytes** | **897 bytes** (Redução de 54%) | Menor footprint de armazenamento no cadastro de contas/StateDB. |
+| **Tamanho da Assinatura** | **3.309 bytes** | **666 bytes** (Redução de 80%) | Drástica redução de overhead por transação e bloco compacto. |
+| **Tamanho Médio da Transação** | **~5,2 KB / TX** | **~1,6 KB / TX** (Redução de ~70%) | Pacotes HTTP RPC e P2P significativamente mais leves. |
+| **Payload do Witness de Bloco**| **65 KB a 82 KB / bloco** | **~20 KB a 25 KB / bloco** (250 TXs) | Bloco compacto (*Skeleton Witness*) 3.2x mais rápido de transmitir. |
+| **Tráfego DTS - Canal BULK** | **150 a 350 KB/s** (Picos 800 KB/s) | **~30 a 70 KB/s** (Est. mesma TPS) | Alívio maciço na saturação de banda dos validadores P2P. |
+| **Tráfego DTS - Canal EXPRESS** | **10 KB/s a 25 KB/s** | **~3 KB/s a 8 KB/s** | Vias rápidas de consenso e socorro ainda mais instantâneas. |
+| **Latência de Verificação** | **500 µs a 662 µs** (0,5 ms) | *A medir na implementação* | Desempenho de validação de assinaturas em CPU multicore. |
+
+> **Nota Arquitetural para Rotação Futura:** Como a assinatura do **Falcon-512 (666 bytes)** é **80% menor** que a do ML-DSA-65 (3.309 bytes), o tráfego do motor DTS no canal BULK deve cair de 150-350 KB/s para apenas ~30-70 KB/s para manter a mesma taxa de TPS (~80 TPS). Este baseline de rede medido sob estresse servirá de métrica de controle oficial para a transição.
 
 ## 🛡️ Documentação e Auditoria
 
