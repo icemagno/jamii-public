@@ -47,6 +47,9 @@ Abaixo estão os resultados reais medidos sob teste de estresse sustentado (*Soa
 | **Socorro Expresso (DTS EXPRESS)**| **5 ms a 18 ms** | Resgate reativo de transações faltantes em blocos compactos com injeção forçada (`AddForced`). |
 | **Estabilidade de Consenso IBFT** | **100% em Round 0 (`R:0`)** | Zero estouros de timeout de rodada ao longo de centenas de blocos consecutivos. |
 
+<img width="1866" height="957" alt="jamii" src="https://github.com/user-attachments/assets/7b2381f5-d94c-41a5-b809-7832d17558a2" />
+
+
 ### Avaliação do Comportamento da Rede:
 * **Resiliência e Recuperação Reativa no Canal EXPRESS:** Em casos pontuais onde transações fofocadas no canal BULK sofrem atrasos micro-temporais, o motor de socorro expresso (`MT_EXPRESS_TX_REQ`) resgata as transações faltantes junto ao proponente em apenas 5 a 18 milissegundos. O mecanismo de injeção forçada (`AddForced`) garante a reconstrução instantânea do bloco compacto sem provocar estouros de timeout no consenso IBFT.
 * **Estabilidade de Estágio Estacionário:** A MemPool oscila de forma saudável na faixa de 500 transações pendentes, provando que a taxa de drenagem do consenso emparelhou perfeitamente com o ritmo do RPC sem vazamento de memória RAM.
