@@ -34,6 +34,7 @@
    - [5.4 Segurança de Memória (Anti-OOM DoS) & SafeClose](#54-segurança-de-memória-anti-oom-dos--safeclose)
 6. [Camada JSON-RPC 2.0, Telemetria & Modos de Nó (`pkg/rpc` & `pkg/node`)](#6-camada-json-rpc-20-telemetria--modos-de-nó-pkgrpc--pkgnode)
    - [6.1 Servidor JSON-RPC 2.0 e RPC Sync Guard](#61-servidor-json-rpc-20-e-rpc-sync-guard)
+     - [6.1.1 Formatador Dinâmico de Endereços via Header (`X-Address-Format: sovereign`)](#611-formatador-dinâmico-de-endereços-via-header-x-address-format-sovereign)
    - [6.2 Métricas e Telemetria Prometheus (`/metrics`)](#62-métricas-e-telemetria-prometheus-metrics)
    - [6.3 Modos de Operação (Validador Core, Archiver e Stateless)](#63-modos-de-operação-validador-core-archiver-e-stateless)
 
@@ -62,15 +63,51 @@ A rede utiliza um byte de prefixo autodescritivo em todas as chaves e assinatura
 | :---: | :--- | :---: | :---: | :---: | :---: | :--- |
 | `0x00` | **Secp256k1** | Tradicional | 33 / 65 bytes | 64/65 bytes | **Homologado** | Compatibilidade ECDSA / Ethereum. |
 | `0x01` | **MLDSA65** | PQC Puro | 1.953 bytes | 3.309 bytes | **Homologado** | NIST FIPS 204 (Dilithium L3). |
-| `0x02` | **Hybrid-MLDSA** | Híbrido | 1.991 bytes | 3.377 bytes | **Homologado** | Dual Security (Secp256k1 + ML-DSA-65). |
-| `0x03` | **Falcon512** | PQC Puro | 898 bytes | 666 bytes | *Planejado* | NIST FIPS Round 4 (NTRU Lattice). Ultracompacto. |
+| `0x02` | **Hybrid** | Híbrido Universal | Variável (936B ou 1.991B) | Variável (735B ou 3.378B) | **Homologado** | Envelope Dual Security And-Gate (Secp256k1 + PQC). |
+| `0x03` | **Falcon512** | PQC Puro | 898 bytes | 666 bytes | **Homologado** | NIST FIPS 206 / FN-DSA (NTRU Lattice Compacto). |
 | `0x04` | **SLHDSA128f** | PQC Puro | 33 bytes | ~7.856 bytes | *Planejado* | NIST FIPS 205 (SPHINCS+ Stateless Hash). Zero lattices. |
-| `0x05` | **Hybrid-Falcon** | Híbrido | ~935 bytes | ~734 bytes | *Planejado* | Dual Security ultracompacto (Secp256k1 + Falcon-512). |
-| `0x06` | **Hybrid-SLHDSA** | Híbrido | ~70 bytes | ~7.924 bytes | *Planejado* | Dual Security estateless conservador. |
+
+### 1.1.1 Enquadramento Binário dos Envelopes Híbridos (Portão-E AND-Gate)
+
+O protocolo Jamii adota uma arquitetura de **estruturas auto-descritivas em cascata (*Typed TLV Envelopes*)**, eliminando qualquer ambiguidade ou adivinhação de algoritmo no deserializador:
+
+#### A. Estrutura Binária da Chave Pública Híbrida (`pubKey.Bytes()`)
+A chave pública serializada no wire SSZ transporta explicitamente os identificadores de algoritmo de cada ramo:
+
+```
+ 1 byte      4 bytes           34 bytes                 898 ou 1953 bytes
+[ 0x02 ] [ TradLen = 34 ] [ 0x00 | Secp256k1 PK ] [ 0x01 ou 0x03 | PQC PK ]
+   │                              │                         │
+   ▼                              ▼                         ▼
+"É Envelope                  "Portão Tradicional:       "Portão Quântico:
+ Híbrido"                     Secp256k1 (0x00)"          0x01 = ML-DSA-65
+                                                         0x03 = Falcon-512"
+```
+
+1. **Byte de Topo (`0x02`)**: Identifica que os dados pertencem a um Envelope Híbrido Universal.
+2. **Comprimento Tradicional (`TradLen`, 4 bytes Little-Endian)**: Delimita exatamente onde termina a chave clássica e onde inicia o payload pós-quântico.
+3. **Ramo Tradicional**: Inicia obrigatoriamente com o byte `0x00` seguido dos 33 bytes da chave comprimida Secp256k1.
+4. **Ramo Quântico**: Inicia obrigatoriamente com o identificador do algoritmo pós-quântico (`0x01` para ML-DSA-65 ou `0x03` para Falcon-512) seguido da chave pública correspondente (1.952 bytes ou 897 bytes).
+
+#### B. Estrutura Binária da Assinatura Híbrida (`tx.Signature`)
+A assinatura composta encapsula ambas as provas criptográficas com overhead mínimo:
+
+```
+  4 bytes            65 bytes                    666 ou 3309 bytes
+[ TradLen = 65 ] [ Assinatura Secp256k1 ] [ Assinatura Pós-Quântica ]
+```
+
+#### C. Lógica de Verificação do Portão-E (AND-Gate Fail-Fast)
+Ao executar a validação de uma transação ou handshake P2P (`tx.Verify()` ou `VerifyHybrid`):
+1. **Strong Binding (Vínculo Inquebrável)**: O nó calcula um hash de compromisso criptográfico que combina a mensagem original, a chave pública tradicional e a chave pública pós-quântica na stack (`computeStrongBindingMessageInto`), impedindo ataques de separação ou substituição de chaves (*Splitting Attacks*):
+   $$\text{BoundMessage} = \text{Keccak256}(\text{Message} \parallel \text{TradPubKey} \parallel \text{QuantPubKey})$$
+2. **Portão Tradicional (Fase 1 - CPU Leve)**: Valida a assinatura ECDSA Secp256k1 contra o `BoundMessage`. Se for inválida, **aborta instantaneamente** sem consumir recursos de CPU com reticulados.
+3. **Portão Quântico (Fase 2 - PQC)**: Utiliza a interface polimórfica `quantPub.Verify(BoundMessage, quantSig)`, validando com o algoritmo específico identificado na chave pública (ML-DSA-65 ou Falcon-512).
+4. **Resultado Estrito**: A transação é aceita **apenas se ambos os portões retornarem verdadeiro** ($\text{Validação} = \text{ECDSA} \land \text{PQC}$).
 
 #### Seleção de Algoritmo via Genesis e APIs do Código
 
-O criador da rede pode especificar o algoritmo padrão no `genesis.json` via parâmetro `"defaultQuantumAlgo": "MLDSA65"`. As APIs internas do nó e do SDK suportam a geração parametrizada:
+O criador da rede pode especificar o algoritmo padrão no `genesis.json` via parâmetro `"defaultQuantumAlgo": "MLDSA65"` ou `"defaultQuantumAlgo": "Falcon512"`. As APIs internas do nó e do SDK suportam a geração parametrizada:
 - **Nó Go (`pkg/node/identity.go`):** `node.LoadOrCreateNodeKeyWithAlgo(dataDir, keyFileName, algo)`
 - **Carteira/SDK (`pkg/wallet/wallet.go`):** `wallet.FromMnemonicWithAlgo(mnemonic, password, algo)`
 
@@ -94,6 +131,33 @@ graph TD
 * **Endereço Mirror (EVM Hex)**: Apresentação hexadecimal no formato EIP-55 `0x...` (ex: `0xa660f35cb1d29acd4ab4771df5ea44fa06202228`).
 
 Ambas as representações mapeiam para os **mesmos 20 bytes físicos** no banco de dados (`StateDB`). Uma transferência realizada para o endereço `0x...` credita instantaneamente o saldo visível no endereço `jamii1...` correspondente, sem contratos intermediários.
+
+#### 1.2.1 Especificação Física no Banco de Dados (Indexação por Payload de 20 Bytes)
+
+Para eliminar ambiguidades na arquitetura de persistência e em auditorias de baixo nível:
+
+1. **Ausência de Strings no Banco:** O banco de dados físico (**PebbleDB**) e a estrutura da **Verkle Tree** não armazenam as representações em texto `"0x1234..."` nem `"jamii1..."`.
+2. **Indexação por Payload de 20 Bytes (`addr.Key()`):** O índice primário da conta no `StateDB` e no cache RAM de contas vivas é derivado estritamente da representação hexadecimal dos 20 bytes brutos do `Payload` (`hex.EncodeToString(addr.Payload)`). Na Verkle Tree, a chave da folha é a hash `Keccak256(Payload)`.
+3. **Endereço Soberano como Envelope Auto-Descritivo:** O formato `jamii1...` funciona como um envelope visual e estrutural codificado em Bech32m que transporta o byte de versão (ex: `0x02`) e o mesmo `Payload` de 20 bytes com verificação de erros BCH.
+4. **Mapeamento de Estado Unificado:** Qualquer consulta enviada via JSON-RPC informando o endereço `0x...` ou `jamii1...` é decodificada na camada de entrada para o mesmo `Payload` de 20 bytes, localizando a mesma folha de estado e o mesmo saldo no banco sem duplicação ou tabelas de conversão.
+5. **Desacoplamento Arquitetural Abstrato (Abstração do Payload):** O `Payload` de 20 bytes é um compromisso binário genérico e desacoplado da criptografia subjacente. A utilização dos 20 bytes da chave Secp256k1 é uma opção estratégica de conveniência para garantir compatibilidade nativa com ferramentas EVM/MetaMask (*Zero-Migration UX*). Arquiteturalmente, o `Payload` pode transportar qualquer vetor de compromisso de 20 bytes (como um hash dual `Keccak256(Secp256k1 || PQC)` ou um hash quântico puro `BLAKE3(PQC)`), sem requerer nenhuma alteração de código ou de esquema no motor de estado (`StateDB`, `PebbleDB` ou `Verkle Tree`).
+
+#### 1.2.2 Emaranhamento Quântico de Endereços (*Quantum Address Entanglement*)
+
+Para prevenir ataques de injeção dinâmica de chaves PQC e garantir imunidade absoluta na era pós-quântica (Q-Day), a Jamii implementa o mecanismo de **Emaranhamento Quântico de Endereços**:
+
+1. **Estrutura e Armazenamento na Folha de Conta (`jamiiAccount`):**
+   - O campo `QuantumEntanglement` armazena uma marca d'água imutável de **20 bytes** na folha da conta do `StateDB` ([`pkg/core/state/account.go`](file:///c:/Magno/Projetos/jamii/pkg/core/state/account.go)).
+   - A serialização SSZ da conta em disco ocupa **124 bytes** (`Nonce` [8B] + `Balance` [32B] + `CodeHash` [32B] + `StorageRoot` [32B] + `QuantumEntanglement` [20B]), mantendo compatibilidade retroativa com registros de 104 bytes.
+
+2. **Fórmula do Compromisso Causal Dual (Bi-Polar Dual Hash):**
+   O valor de 20 bytes é derivado pela aplicação da extração Bi-Polar (10 bytes iniciais + 10 bytes finais) sobre o hash combinado das sub-chaves pública clássica e quântica:
+   $$\text{QuantumEntanglement}_{20\text{B}} = \text{BiPolar20}\Big(\text{Keccak256}\big(\text{Keccak256}(PK_{\text{Clássica}}) \parallel \text{Keccak256}(PK_{\text{Quântica}})\big)\Big)$$
+
+3. **Garantias de Bloco no `StateProcessor` (`pkg/core/processor.go`):**
+   - **Selamento no 1º Envio:** Na primeira transação executada por um remetente, o `StateProcessor` calcula o compromisso `QuantumEntanglement` a partir da chave pública híbrida e o grava permanentemente no `StateDB`.
+   - **Trava Anti-Injeção PQC:** Nas transações subsequentes do remetente, o `StateProcessor` recalcula o compromisso da transação recebida e valida contra o `QuantumEntanglement` selado na conta. Divergências resultam no cancelamento imediato da transação (`ErrPQCKeyMismatch`).
+   - **Elevação Imutável de Segurança:** Uma vez selada com o `QuantumEntanglement`, a conta é permanentemente promovida para o Modo PQC, rejeitando transações puramente clássicas sem envelope PQC (`ErrPQCRequired`), mesmo que a rede esteja operando com `allowClassicalTransactions = true`.
 
 ---
 
@@ -323,6 +387,17 @@ O módulo [`pkg/rpc`](file:///c:/Magno/Projetos/jamii/pkg/rpc) fornece uma inter
     "error": "Node in sync mode, retry later"
   }
   ```
+
+#### 6.1.1 Formatador Dinâmico de Endereços via Header (`X-Address-Format: sovereign`)
+
+Para conciliar a retrocompatibilidade estrita com carteiras Ethereum (MetaMask, Rabby, Ethers.js) e a exibição nativa da identidade soberana nos produtos nativos Jamii (Jamii Wallet, Block Explorer, SDK Java), o gateway RPC inspeciona o cabeçalho HTTP de cada requisição:
+
+1. **Padrão (Sem Header)**:
+   * Retorna os campos de endereço (`from`, `to`, `contractAddress`, etc.) no formato Hexadecimal Ethereum (`0x...` via `.Mirror()`).
+   * Garante que ferramentas clássicas Web3 e MetaMask validem comprovantes e hashes sem erros de parsing.
+2. **Formato Soberano (`X-Address-Format: sovereign`)**:
+   * Quando o cliente envia o header HTTP `X-Address-Format: sovereign`, as respostas JSON-RPC convertem automaticamente os endereços para a codificação Bech32 Soberana (`jamii1...` via `.String()`).
+   * Adotado nativamente no aplicativo [`jamii-wallet/App.js`](file:///c:/Magno/Projetos/jamii/jamii-wallet/App.js) e no cliente HTTP do SDK Java [`JamiiClient.java`](file:///c:/Magno/Projetos/jamii/sdk/java/jamii-java-sdk/jamii-sdk/src/main/java/com/jamii/sdk/rpc/JamiiClient.java).
 
 ### 6.2 Métricas e Telemetria Prometheus (`/metrics`)
 
