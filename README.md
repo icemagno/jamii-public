@@ -84,7 +84,7 @@ Com a homologação e o teste de carga massiva do **Falcon-512**, os resultados 
 
 > **Nota de Desempenho Homologada:** A implementação do **Falcon-512** permitiu elevar a capacidade máxima da rede Jamii para **351 TPS em pico** e **120,9 TPS sustentados**, reduzindo o tamanho da assinatura por transação para apenas **666 bytes** e mantendo o tempo de verificação criptográfica abaixo de **0,5 milissegundos**.
 
-<img width="1866" height="957" alt="jamii" src="https://github.com/user-attachments/assets/7b2381f5-d94c-41a5-b809-7832d17558a2" />
+<img width="1892" height="987" alt="jamii-super-carga-falcon2" src="https://github.com/user-attachments/assets/c2bd2771-23d5-4a0d-a996-03ade1190bd1" />
 
 
 ## 🛡️ Documentação e Auditoria
