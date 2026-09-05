@@ -105,45 +105,186 @@ O Jamii é regido por uma arquitetura rigorosa e documentada. Consulte os pilare
 *   ✅ **Imutabilidade de Memória:** Prevenção de Data Races no cálculo de hashes de transação.
 *   ✅ **Resiliência DoS:** Operações aritméticas seguras com tratamento de erros.
 
-## 🛠️ Começando
+## 📦 Jamii Sovereign SDK (Multi-Target Client Integration)
+
+O **[Jamii Sovereign SDK](sdk/README.md)** (`sdk/`) é a biblioteca canônica unificada para desenvolvimento de clientes, carteiras, exploradores de blocos, dApps, bots e integrações corporativas com a rede Jamii.
+
+Ele atua como a **única ponte oficial** entre o mundo externo e o interior do nó, encapsulando chaves, serialização e assinaturas sem expor o código-fonte ou dependências internas do nó validador.
+
+### 🛡️ Recursos Fundacionais Consolidados
+* **Entropia e Mnemônicos BIP-39:** Geração de 12 palavras em conformidade criptográfica.
+* **Derivação Híbrida Soberana:**
+  * Derivação Secp256k1 (BIP-44: `m/44'/60'/0'/0/0`) para o endereço Mirror (`0x...`).
+  * Derivação PQC ML-DSA-65 (via HMAC-SHA512) para a segurança pós-quântica.
+  * Endereço Soberano Jamii Bech32 (`jamii1...`).
+* **Keystore Blindado V3:** Criptografia local com Scrypt ($N=131072, r=8, p=1$) e AES-256-GCM com destruição física de memória RAM (`Wipe()`).
+* **Serialização SSZ e Assinatura Híbrida:** Montagem de transações Jamii Sovereign V1, cálculo do digest de 32 bytes e assinatura simultânea (Secp256k1 + ML-DSA-65).
+
+### 🔒 Matriz de Distribuição Multi-Alvo (Zero Código-Fonte Exposto)
+
+| Plataforma / Linguagem | Artefato Compilado | Mecanismo de Invocação | Exemplo / Wrapper |
+| :--- | :--- | :--- | :--- |
+| **Go Externo** | `jamii_sdk.dll` / `.so` | CGO linkando contra o binário nativo | [`sdk/targets/go/client.go`](sdk/targets/go/client.go) |
+| **Java / Spring** | `jamii_sdk.dll` / `.so` | **JNA (Java Native Access)** | [`sdk/targets/java/JamiiClient.java`](sdk/targets/java/JamiiClient.java) |
+| **C# / .NET** | `jamii_sdk.dll` / `.so` | **P/Invoke `[DllImport]`** | [`sdk/targets/csharp/JamiiSdk.cs`](sdk/targets/csharp/JamiiSdk.cs) |
+| **Android** | `jamii.aar` | Dependência nativa no Gradle | [`sdk/targets/android/README.md`](sdk/targets/android/README.md) |
+
+### ⚙️ Como Compilar o SDK
+
+```bash
+# Compilar a biblioteca C-Shared (DLL no Windows ou .SO no Linux + Header C-ABI):
+# No Windows:
+CGO_ENABLED=1 go build -buildmode=c-shared -o sdk/dist/cshared/jamii_sdk.dll ./sdk/cshared/main.go
+
+# No Linux:
+CGO_ENABLED=1 go build -buildmode=c-shared -o sdk/dist/cshared/libjamii_sdk.so ./sdk/cshared/main.go
+
+# Compilar o binding Android AAR (requer GoMobile e Android NDK):
+gomobile bind -target=android/arm64,android/amd64 -androidapi 21 -o sdk/dist/mobile/jamii.aar ./pkg/wallet/mobile
+
+# Executar a suíte de testes unitários do SDK:
+go test -v ./sdk/core/...
+```
+
+Para mais detalhes e guias de integração, consulte a **[Documentação do SDK](sdk/README.md)**.
+
+## 🛠️ Requisitos de Compilação e Arquitetura Multiplataforma
+
+A Jamii implementa o algoritmo pós-quântico **Falcon-512 oficial homologado** (NIST FIPS 206 / FN-DSA), além do **ML-DSA-65** e **Secp256k1**. 
+
+### 🧠 Como Funciona e Por Que é Necessário
+
+1. **Implementação Oficial em C (Sem Mocks)**:
+   - O algoritmo Falcon é integrado através do módulo `github.com/algorand/falcon`, que empacota diretamente o código C de referência oficial do NIST/PQClean (`keygen.c`, `fft.c`, `fpr.c`, `sign.c`, `vrfy.c`, `shake.c`).
+   - Não existem mocks, testes simulados ou stubs na base de código. Por conta disso, **todo e qualquer binário compilado exige CGO ativado (`CGO_ENABLED=1`)** para compilar e linkar a matemática de reticulados NTRU e amostragem Gaussiana.
+
+2. **O Desafio da Cross-Compilação em Go**:
+   - Em Go padrão, cross-compilar com `CGO_ENABLED=0` é trivial (`GOOS=linux go build`), mas desativa o CGO.
+   - Quando `CGO_ENABLED=1` está ativo, o compilador do Go delega a compilação do código C/C++ para o utilitário configurado na variável de ambiente `CC` e `CXX`. Um compilador GCC comum de Windows (MinGW) só consegue gerar executáveis PE/COFF para Windows, falhando ao tentar gerar binários ELF para Linux.
+
+3. **A Solução Adotada: Zig como Cross-Compilador Universal**:
+   - O **Zig** (`zig cc` e `zig c++`) é adotado como a toolchain C/C++ padrão do projeto.
+   - O binário do Zig (~45 MB) traz embutidos os cabeçalhos de sistema e bibliotecas libc (`musl` e `glibc`) para centenas de arquiteturas.
+   - Ao instruir o Go a usar `CC="zig cc -target <alvo>"` e `CXX="zig c++ -target <alvo>"`, o desenvolvedor consegue compilar binários nativos de alta performance para Linux AMD64 e Linux ARM64 diretamente do Windows (ou macOS), sem necessidade de máquinas virtuais, Docker ou WSL.
+
+---
+
+### 📋 Pré-requisitos de Instalação
+
+| Ferramenta | Versão Mínima | Finalidade | Como Obter |
+| :--- | :--- | :--- | :--- |
+| **Go** | **1.22+** (rec. 1.24+) | Compilador principal da linguagem Go | [golang.org/dl](https://go.dev/dl/) ou `winget install GoLang.Go` |
+| **Zig** | **0.13.0+** (rec. 0.16+) | **Cross-compilador universal C/C++** (`zig cc` / `zig c++`) para Windows, Linux AMD64 e ARM64 | `winget install -e --id zig.zig` ou [ziglang.org/download](https://ziglang.org/download/) |
+| **GCC / Clang** | 13.0+ | *(Opcional)* Apenas se compilar nativamente em ambientes Linux/macOS | `sudo apt install build-essential` (Ubuntu/Debian) |
+| **Git** | Qualquer versão | Controle de versão | [git-scm.com](https://git-scm.com/) |
+
+---
+
+### 💻 Comandos Canônicos de Compilação
+
+Execute os comandos abaixo a partir da raiz do repositório clonado:
+
+#### 1. Compilando no Windows para Windows (amd64)
+
+```powershell
+# No PowerShell:
+$env:GOOS="windows"
+$env:GOARCH="amd64"
+$env:CGO_ENABLED="1"
+$env:CC="zig cc -target x86_64-windows-gnu"
+$env:CXX="zig c++ -target x86_64-windows-gnu"
+
+go build -trimpath -ldflags="-s -w" -o jamii.exe ./cmd/jamii
+```
+
+*(Caso possua o MinGW GCC instalado no PATH do Windows, basta rodar: `set CGO_ENABLED=1 && go build -trimpath -ldflags="-s -w" -o jamii.exe ./cmd/jamii`)*
+
+#### 2. Cross-Compilando a partir do Windows para Linux AMD64 (Servidores Ubuntu / Debian)
+
+```powershell
+# No PowerShell:
+$env:GOOS="linux"
+$env:GOARCH="amd64"
+$env:CGO_ENABLED="1"
+$env:CC="zig cc -target x86_64-linux-gnu"
+$env:CXX="zig c++ -target x86_64-linux-gnu"
+
+go build -trimpath -ldflags="-s -w" -o jamii-linux-amd64 ./cmd/jamii
+```
+
+#### 3. Cross-Compilando a partir do Windows para Linux ARM64 (Armbian / Raspberry Pi / SBCs)
+
+```powershell
+# No PowerShell:
+$env:GOOS="linux"
+$env:GOARCH="arm64"
+$env:CGO_ENABLED="1"
+$env:CC="zig cc -target aarch64-linux-gnu"
+$env:CXX="zig c++ -target aarch64-linux-gnu"
+
+go build -trimpath -ldflags="-s -w" -o jamii-linux-arm64 ./cmd/jamii
+```
+
+#### 4. Compilando Diretamente em um Servidor Linux Nativo (Ubuntu/Debian/CentOS)
+
+Em servidores Linux que possuem `gcc` e `g++` instalados:
+
+```bash
+export CGO_ENABLED=1
+go build -trimpath -ldflags="-s -w" -o jamii ./cmd/jamii
+```
+
+#### 5. Compilando o Gerador de Tráfego / Testes de Carga (`cmd/traffic`)
+
+O injetor de carga também requer CGO pois instancia identidades Falcon e ML-DSA em RAM:
+
+```powershell
+# No Windows (PowerShell):
+$env:CGO_ENABLED="1"
+$env:CC="zig cc -target x86_64-windows-gnu"
+$env:CXX="zig c++ -target x86_64-windows-gnu"
+go build -trimpath -ldflags="-s -w" -o ./cmd/traffic/traffic.exe ./cmd/traffic/generator.go
+
+# No Linux (Bash):
+CGO_ENABLED=1 go build -trimpath -ldflags="-s -w" -o ./cmd/traffic/traffic ./cmd/traffic/generator.go
+```
+
+---
+
+### 🧪 Rodando os Testes de Validação
+
+Para validar a integridade da criptografia pós-quântica e das regras de consenso:
+
+```bash
+# Validação estrita do módulo criptográfico (Falcon-512, ML-DSA-65, Secp256k1 e Híbrido):
+go test -v ./pkg/crypto/signer/...
+
+# Testes de integração E2E de rotação de nós em tempo de execução:
+go test -v ./pkg/node/...
+
+# Suíte completa de testes unitários do núcleo e carteira:
+go test -v ./pkg/...
+go test -v ./sdk/core/...
+```
 
 ### Configuração Inicial (Setup)
 Antes de iniciar um nó pela primeira vez, você pode gerar sua identidade soberana (chave privada e manifesto de endereços) usando o comando de setup:
 
 ```bash
 # Gera a identidade no diretório padrão (./data)
-jamii.exe setup generate-key
+go run cmd/jamii/main.go setup generate-key
 
 # Ou especificando um diretório customizado
-jamii.exe setup generate-key --datadir ./meu_node_data
+go run cmd/jamii/main.go setup generate-key --datadir ./meu_node_data
 ```
 
 Este comando criará o arquivo `nodekey` (chave privada híbrida PQC) e o `node_address.json` contendo seu **Sovereign Address**, necessário para inclusão no arquivo `genesis.json` caso você deseje ser um validador.
 
 ### Iniciando o Nó
 ```bash
-docker run \
-  --name jamii-node \
-  -v ./config.yaml:/config.yaml:ro \
-  -v ./genesis.json:/genesis.json:ro \
-  -v ./peers.json:/peers.json:ro \
-  -v ./datadir:/datadir \
-  -p 8545:8545 \
-  -p 30303:30303 \
-  -p 42000:42000 \
-  -d magnoabreu/jamii-node:0.1.0-alpha 
-```
+# Inicia o nó usando a configuração padrão
+go run cmd/jamii/main.go start
 
-### Iniciando o Archiver
-```bash
-docker run \
-  --name jamii-archiver \
-  -v ./config.yaml:/config.yaml:ro \
-  -v ./genesis.json:/genesis.json:ro \
-  -v ./peers.json:/peers.json:ro \
-  -v ./datadir:/datadir \
-  -p 8556:8556 \
-  -p 30310:30310 \
-  -p 42020:42020 \
-  -d magnoabreu/jamii-archiver:0.1.0-alpha 
-```  
+# Ou especificando um arquivo de configuração YAML
+go run cmd/jamii/main.go start --config config.yaml
+```
