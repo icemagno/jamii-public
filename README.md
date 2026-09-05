@@ -265,24 +265,83 @@ go test -v ./pkg/...
 go test -v ./sdk/core/...
 ```
 
-### Configuração Inicial (Setup)
-Antes de iniciar um nó pela primeira vez, você pode gerar sua identidade soberana (chave privada e manifesto de endereços) usando o comando de setup:
+### 🔑 Configuração Inicial e Geração de Identidade (`jamii keygen`)
+
+Antes de iniciar um nó pela primeira vez, é necessário gerar a identidade criptográfica do nó (**Besu Style**). O comando `jamii keygen` cria a chave privada híbrida no disco e exibe seu manifesto soberano:
 
 ```bash
-# Gera a identidade no diretório padrão (./data)
-go run cmd/jamii/main.go setup generate-key
+# Geração padrão com Falcon-512 (ou MLDSA65) no diretório padrão (./data):
+jamii keygen --algo Falcon512
 
-# Ou especificando um diretório customizado
-go run cmd/jamii/main.go setup generate-key --datadir ./meu_node_data
+# Ou especificando um diretório de dados customizado:
+jamii keygen --algo Falcon512 --datadir ./meu_node_data
+
+# Ou utilizando a chamada canônica do Go:
+go run ./cmd/jamii keygen --algo Falcon512 --datadir ./meu_node_data
 ```
 
-Este comando criará o arquivo `nodekey` (chave privada híbrida PQC) e o `node_address.json` contendo seu **Sovereign Address**, necessário para inclusão no arquivo `genesis.json` caso você deseje ser um validador.
+#### Parâmetros do `jamii keygen`:
+* `--algo <ALGO>`: Define o algoritmo de assinatura pós-quântico utilizado na chave do nó (`Falcon512` ou `MLDSA65`, padrão `MLDSA65`).
+* `--datadir <DIR>`: Diretório onde a chave privada binária (`nodekey`) e o manifesto (`node_address.json`) serão armazenados (padrão `./data`).
+* `--config <ARQ>`: Caminho para o arquivo `config.yaml` caso deseje ler configurações existentes (padrão `config.yaml`).
 
-### Iniciando o Nó
+#### Artefatos Gerados no Disco:
+1. **`nodekey`**: Arquivo binário protegido com permissões restritas (`0600`) contendo a chave privada híbrida serializada.
+2. **`node_address.json`**: Manifesto público contendo o **Sovereign Address** (`jamii1...`), o **Mirror Address** (`0x...`) e a chave pública completa em formato hexadecimal.
+
+> **Inclusão no Bloco Gênese:** Copie o **Sovereign Address** ou a **PublicKey (Hex)** exibida no console para o campo `validators` do arquivo `genesis.json` caso o nó seja configurado como um dos nós validadores do consenso IBFT 2.0.
+
+---
+
+### 🧬 Metodologia de Criação de Chaves e Identidade Unificada
+
+A Jamii implementa o paradigma de **Identidade Unificada Shadowless**, garantindo interoperabilidade nativa com ferramentas EVM tradicionais e proteção matemática contra computação quântica a partir de uma única semente:
+
+#### 1. Derivação Soberana a partir de Semente de 12 Palavras (BIP-39 / BIP-44)
+Para contas de usuários e carteiras (SDK / Mobile / RPC):
+* **Entropia BIP-39 (12 Palavras):** Uma frase semente mnemônica de 12 palavras em inglês (128 bits de entropia) gera a semente mestra de 512 bits via PBKDF2-HMAC-SHA512.
+* **Ramo Tradicional (Secp256k1):** O caminho de derivação canônico BIP-44 `m/44'/60'/0'/0/0` deriva a chave privada ECDSA e gera o endereço **Mirror** (`0x...`), permitindo total compatibilidade com MetaMask e ferramentas Ethereum.
+* **Ramo Pós-Quântico (PQC):** A mesma semente mestre é expandida via HMAC-SHA512 para gerar deterministicamente a chave pós-quântica do algoritmo selecionado (`Falcon512` ou `MLDSA65`).
+* **Compromisso Bi-Polar (Payload de 20 Bytes):** Ambas as chaves compartilham o mesmo hash identificador de 20 bytes. O endereço `jamii1...` (Soberano Bech32) e o endereço `0x...` (Mirror Hex) apontam para a mesma folha física no StateDB e na Verkle Tree.
+* **Armazenamento Seguro:** As chaves de carteira são salvas em formato **Keystore V3** cifradas com Scrypt ($N=131072, r=8, p=1$) e AES-256-GCM com destruição física de memória RAM (`Wipe()`).
+
+#### 2. Protocolo de Rotação Criptográfica On-Chain com Semente (`jamii rotate`)
+Validadores ativos na rede podem alterar o algoritmo criptográfico de sua chave (ex.: migrando de `MLDSA65` para `Falcon512`) mantendo o mesmo endereço na blockchain (`jamii1...` / `0x...`), utilizando sua frase semente de 12 palavras:
+
 ```bash
-# Inicia o nó usando a configuração padrão
-go run cmd/jamii/main.go start
-
-# Ou especificando um arquivo de configuração YAML
-go run cmd/jamii/main.go start --config config.yaml
+# Solicita a rotação do componente quântico do validador para Falcon-512:
+jamii rotate --seed "palavra1 palavra2 palavra3 palavra4 palavra5 palavra6 palavra7 palavra8 palavra9 palavra10 palavra11 palavra12" --round 1 --algo Falcon512 --rpc-port 8545
 ```
+
+* **`--seed`**: Frase mnemônica BIP-39 de 12 palavras que custodia os segredos do validador.
+* **`--round`**: Número sequencial da rodada de rotação ($\ge 1$).
+* **`--algo`**: Algoritmo PQC de destino (`Falcon512` ou `MLDSA65`).
+* **Como Funciona:** O comando deriva o segredo da rodada $S_n$ e o hash de compromisso da próxima rodada $H_{n+1}$ via HMAC-SHA256 (`DeriveRotationSecret`), gera a nova chave PQC, assina uma Prova de Posse (PoP) e envia uma transação de sistema isenta de gás para o contrato de governança de validadores (`ValidatorRegistry.sol` em `0x00000000000000000000000000000000fffffffd`). A chave de transição é gravada em `nodekey.new` e carregada dinamicamente pelo consenso IBFT sem interrupção do nó.
+
+---
+
+### 🚀 Iniciando o Nó Core (`jamii start`)
+
+Com a identidade gerada e o `genesis.json` configurado, inicie o nó validador ou observador:
+
+```bash
+# Inicia o nó usando a configuração padrão (config.yaml e genesis.json locais):
+jamii start
+
+# Ou com parâmetros explícitos:
+jamii start --config config.yaml --genesis genesis.json --datadir ./data
+
+# Ou via chamada canônica do Go:
+go run ./cmd/jamii start --config config.yaml --genesis genesis.json --datadir ./data
+```
+
+#### Principais Flags de Execução:
+* `--config <ARQ>`: Caminho do arquivo de configuração operacional (padrão `config.yaml`).
+* `--genesis <ARQ>`: Caminho do arquivo de definição do bloco gênese (padrão `genesis.json`).
+* `--datadir <DIR>`: Diretório para armazenamento da base de dados PebbleDB e chaves (padrão `./data`).
+* `--peers <ARQ>`: Caminho do arquivo JSON de registro de peers lógicos (`peers.json`).
+* `--miner-enabled`: Habilita (`true`) ou desabilita (`false`) a validação de blocos e votos IBFT 2.0 (padrão `true`).
+* `--stateless`: Executa o nó em modo 100% em memória RAM, sem persistência em disco (padrão `false`).
+* `--log-level`: Nível de detalhamento dos logs (`trace`, `debug`, `info`, `warn`, `error`).
+* `--enable-vm-tracer`: Ativa o rastreador detalhado de opcodes executados na EVM (padrão `false`).
+* `--dump-data`: Salva os metadados de bloco, transações e mapa d
