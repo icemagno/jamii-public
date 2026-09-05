@@ -146,8 +146,6 @@ gomobile bind -target=android/arm64,android/amd64 -androidapi 21 -o sdk/dist/mob
 go test -v ./sdk/core/...
 ```
 
-Para mais detalhes e guias de integração, consulte a **[Documentação do SDK](sdk/README.md)**.
-
 ## 🛠️ Requisitos de Compilação e Arquitetura Multiplataforma
 
 A Jamii implementa o algoritmo pós-quântico **Falcon-512 oficial homologado** (NIST FIPS 206 / FN-DSA), além do **ML-DSA-65** e **Secp256k1**. 
