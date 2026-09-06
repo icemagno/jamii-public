@@ -97,8 +97,7 @@ A evolução do projeto exige a unificação dos módulos em um orquestrador cen
 | Opção | Tipo | Padrão | Descrição |
 | :--- | :---: | :---: | :--- |
 | `data_dir` | `string` | `"./data"` | Diretório base para o armazenamento de dados (PebbleDB) e identidade do nó. |
-| `node_key_file` | `string` | `"./nodekey"` | Arquivo de chave privada do nó. |
-| `node_key_algo` | `string` | `"MLDSA65"` | Algoritmo PQC da chave privada do nó (`"MLDSA65"`, `"Falcon512"`, `"Secp256k1"`). |
+| `node_key_file` | `string` | `"./nodekey"` | Arquivo de chave privada do nó. As chaves são autodescritivas (o algoritmo é detectado do próprio arquivo). |
 | `miner_enabled` | `boolean` | `true` | Habilita a participação ativa do nó no consenso IBFT 2.0. |
 | `rpc_port` | `integer` | `8545` | Porta HTTP/TCP para o servidor JSON-RPC 2.0. |
 | `p2p_port` | `integer` | `30303` | Porta TCP para o protocolo DTS (Distributed Transaction Store). |

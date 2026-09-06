@@ -10,7 +10,9 @@
 ## 📑 Sumário
 
 1. [Visão Geral e Filosofia Soberana Pós-Quântica](#1-visão-geral-e-filosofia-soberana-pós-quântica)
-   - [1.1 Criptografia Híbrida L3 (ML-DSA-65 + Secp256k1)](#11-criptografia-híbrida-l3-ml-dsa-65--secp256k1)
+   - [1.1 Criptografia Híbrida L3 e Agilidade Criptográfica (Signature Agility)](#11-criptografia-híbrida-l3-e-agilidade-criptográfica-signature-agility)
+   - [1.1.1 Enquadramento Binário dos Envelopes Híbridos (Portão-E AND-Gate)](#111-enquadramento-binário-dos-envelopes-híbridos-portão-e-and-gate)
+   - [1.1.2 Especificação CGO e Compilação Multiplataforma do Falcon-512](#112-especificação-cgo-e-compilação-multiplataforma-do-falcon-512-nist-fips-206)
    - [1.2 Identidade Unificada Shadowless](#12-identidade-unificada-shadowless)
 2. [Arquitetura de Estado e Armazenamento (`pkg/store` & `pkg/trie`)](#2-arquitetura-de-estado-e-armazenamento-pkgstore--pkgtrie)
    - [2.1 Bonsai Turbo: Acesso a Estado em Tempo Constante O(1)](#21-bonsai-turbo-acesso-a-estado-em-tempo-constante-o1)
@@ -110,6 +112,26 @@ Ao executar a validação de uma transação ou handshake P2P (`tx.Verify()` ou 
 O criador da rede pode especificar o algoritmo padrão no `genesis.json` via parâmetro `"defaultQuantumAlgo": "MLDSA65"` ou `"defaultQuantumAlgo": "Falcon512"`. As APIs internas do nó e do SDK suportam a geração parametrizada:
 - **Nó Go (`pkg/node/identity.go`):** `node.LoadOrCreateNodeKeyWithAlgo(dataDir, keyFileName, algo)`
 - **Carteira/SDK (`pkg/wallet/wallet.go`):** `wallet.FromMnemonicWithAlgo(mnemonic, password, algo)`
+
+### 1.1.2 Especificação CGO e Compilação Multiplataforma do Falcon-512 (NIST FIPS 206)
+
+O algoritmo **Falcon-512** (*Fast-Fourier Lattice-based Digital Signature Architecture*) é integrado à Jamii Blockchain como esquema de assinatura pós-quântica de alta densidade e máxima eficiência de rede.
+
+#### A. Eliminação de Stubs e Homologação CGO Nativa
+Diferente de abordagens baseadas em emuladores ou stubs em Go puro, a Jamii adota **exclusivamente a implementação de referência oficial em C submetida e aprovada no NIST** (consorciada por Thomas Pornin), integrada através da biblioteca [`github.com/algorand/falcon`](https://github.com/algorand/falcon):
+- **CGO Obrigatório**: O nó Jamii exige compilação com `CGO_ENABLED=1`. Mocks, stubs (`falcon_nocgo.go`) ou aproximações foram permanentemente eliminados da base de código.
+- **Primitivas em C (`pkg/crypto/signer/falcon.go`)**: A geração de chaves (`falcon_keygen`), assinatura comprimida (`falcon_sign_dyn` / `falcon_sign_compressed`) e verificação matemática (`falcon_verify`) operam diretamente nas rotinas em C de alta velocidade, em estrita conformidade com o padrão **NIST FIPS 206**.
+- **Assinatura Comprimida Dinâmica**: A assinatura pura varia tipicamente entre ~666 e ~690 bytes devido à codificação Huffman/Golomb dos coeficientes dos polinômios em reticulados NTRU. No formato unificado serializado pela Jamii, a assinatura acondiciona a chave pública (897 bytes) totalizando ~1.280 bytes com integridade verificável.
+
+#### B. Toolchain Universal de Cross-Compilação via Zig
+A incorporação de código C via CGO impõe a necessidade de um compilador C compatível em todas as plataformas de compilação e deploy. O projeto padroniza o **Zig** (`zig cc` / `zig c++`) como cross-compiler C/C++ universal:
+- **Windows Nativo / GNU**: Dispensa a instalação de suítes pesadas como MSYS2 ou MinGW-w64 completo, bastando invocar `CC="zig cc -target x86_64-windows-gnu"`.
+- **Cross-Compilação Linux AMD64**: `CC="zig cc -target x86_64-linux-gnu"`.
+- **Cross-Compilação Linux ARM64 (Armbian / Servidores Soberanos)**: `CC="zig cc -target aarch64-linux-gnu"`.
+- **Supressão de Avisos de Pragma**: Configuração das flags `-Wno-unknown-pragmas -Wno-macro-redefined` no `CGO_CFLAGS` para garantir saídas de compilação limpas e determinísticas.
+
+#### C. Descontinuação do Alvo WebAssembly (WASM)
+Devido à dependência de aritmética de ponto flutuante de 64 bits de alta precisão presente na implementação em C do Falcon-512 (incompatível com o target WebAssembly nativo do Go sem emuladores Emscripten adicionais), o alvo WASM client-side foi descontinuado (`sdk/wasm`). Aplicações web conectam-se à rede utilizando os clientes RPC JSON padrão e os SDKs oficiais (Go e Java).
 
 ### 1.2 Identidade Unificada Shadowless
 
